@@ -1,0 +1,18 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.FaceBook" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+        <!-- Define a custom button style -->
+        <item name="android:buttonStyle">@style/FacebookButton</item>
+    </style>
+
+    <!-- Custom button style -->
+    <style name="FacebookButton" parent="@android:style/Widget.Button">
+        <item name="android:background">#2196F3</item> <!-- Blue background color -->
+        <item name="android:textColor">#FFFFFF</item> <!-- White text color -->
+    </style>
+
+    <style name="Theme.FaceBook" parent="Base.Theme.FaceBook" />
+</resources>
