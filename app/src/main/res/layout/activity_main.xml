@@ -12,6 +12,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/blue_button_background"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
         android:onClick="logout"
         android:text="Go To"
         app:layout_constraintBottom_toBottomOf="parent"

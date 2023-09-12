@@ -40,7 +40,7 @@ import android.content.Intent;
 public class CreateAccount extends AppCompatActivity {
 
     public static final String TAG = "Tag";
-    private static final int PICK_IMAGE_REQUEST = 1;
+    static final int PICK_IMAGE_REQUEST = 1;
 
     EditText FullName,Email,Password,Phone;
     Button RegisterBtn,selectedImageBtn;

@@ -27,7 +27,7 @@ import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginAccount extends AppCompatActivity {
 
-    EditText Email,Password;
+    EditText Email, Password;
     Button LoginBtn;
     TextView CreateBtn;
     ProgressBar progressBar2;
@@ -46,7 +46,6 @@ public class LoginAccount extends AppCompatActivity {
         progressBar2 = findViewById(R.id.progressBar2);
 
 
-
         LoginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -54,15 +53,15 @@ public class LoginAccount extends AppCompatActivity {
                 String email = Email.getText().toString().trim();
                 String password = Password.getText().toString().trim();
 
-                if (TextUtils.isEmpty(email)){
+                if (TextUtils.isEmpty(email)) {
                     Email.setError("Email is Required");
                     return;
                 }
-                if (TextUtils.isEmpty(password)){
+                if (TextUtils.isEmpty(password)) {
                     Password.setError("Password is Required");
                     return;
                 }
-                if (password.length()<6){
+                if (password.length() < 6) {
                     Password.setError("Password must be above 6 Characters");
                     return;
                 }
@@ -73,8 +72,9 @@ public class LoginAccount extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
                                     Toast.makeText(LoginAccount.this, "Logged in Successfully", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(getApplicationContext(), MainPage.class);
-                                    startActivity(intent);
+                                    startActivity(new Intent(getApplicationContext(),MainPage.class));
+                                    Log.e(TAG, "Navigation to MainPage activity");
+
                                 } else {
                                     Log.e(TAG, "Authentication failed", task.getException());
                                     Toast.makeText(LoginAccount.this, "Please Enter valid mail or Password", Toast.LENGTH_SHORT).show();
@@ -91,7 +91,7 @@ public class LoginAccount extends AppCompatActivity {
         CreateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(getApplicationContext(),CreateAccount.class));
+                startActivity(new Intent(getApplicationContext(), CreateAccount.class));
 
             }
         });
