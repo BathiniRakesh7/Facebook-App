@@ -2,12 +2,17 @@ package com.example.facebook;
 
 import com.google.firebase.database.Exclude;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Upload {
     private String mName;
     private String mImageUrl;
     private String mKey;
 
     private int mLikes;
+
+    private List<String> mComments;
 
     public Upload() {
         //empty constructor needed
@@ -20,6 +25,8 @@ public class Upload {
 
         mName = name;
         mImageUrl = imageUrl;
+        mComments = new ArrayList<>();
+
     }
 
     public String getName() {
@@ -44,6 +51,14 @@ public class Upload {
 
     public void setLikes(int likes) {
         mLikes = likes;
+    }
+
+    public List<String> getComments() {
+        return mComments;
+    }
+
+    public void setComments(List<String> comments) {
+        mComments = comments;
     }
 
 

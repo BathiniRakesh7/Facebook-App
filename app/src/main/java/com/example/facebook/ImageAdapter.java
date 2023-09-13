@@ -1,14 +1,14 @@
 package com.example.facebook;
 
 import android.content.Context;
-import android.nfc.Tag;
-import android.util.Log;
+;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,13 +44,14 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
     public void onBindViewHolder(ImageViewHolder holder, int position) {
         Upload uploadCurrent = mUploads.get(position);
         holder.textViewName.setText(uploadCurrent.getName());
-        holder.like_text.setText(String.valueOf(uploadCurrent.getLikes())); // Display the likes count
+        holder.like_text.setText(String.valueOf(uploadCurrent.getLikes()));
 
         Picasso.get().load(uploadCurrent.getImageUrl())
                 .placeholder(R.mipmap.ic_launcher)
                 .fit()
                 .centerCrop()
                 .into(holder.imageView);
+
         if (holder.like_btn != null) {
             holder.like_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -93,7 +94,21 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         } else {
             Toast.makeText(mContext, "Error: Like button or Upload is null", Toast.LENGTH_SHORT).show();
         }
+
+        holder.commentBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mListener != null) {
+                    int adapterPosition = holder.getAdapterPosition();
+                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                        mListener.onCommentClick(adapterPosition);
+                    }
+
+                }
+            }
+        });
     }
+
 
     @Override
     public int getItemCount() {
@@ -106,6 +121,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         public ImageView imageView;
         private final ImageView like_btn ;
         private final TextView like_text;
+        public Button commentBtn;
+        public RecyclerView recyclerViewComments;
 
         public ImageViewHolder(View itemView) {
             super(itemView);
@@ -114,6 +131,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             imageView = itemView.findViewById(R.id.image_view_upload);
             like_text = itemView.findViewById(R.id.like_text);
             like_btn = itemView.findViewById(R.id.like_btn);
+            commentBtn = itemView.findViewById(R.id.button_post_comment);
+            recyclerViewComments = itemView.findViewById(R.id.recycler_view_comments);
 
             itemView.setOnClickListener(this);
             itemView.setOnCreateContextMenuListener(this);
@@ -165,6 +184,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         void onWhatEverClick(int position);
 
         void onDeleteClick(int position);
+
+        void onCommentClick(int position);
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {

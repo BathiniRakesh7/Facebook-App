@@ -12,9 +12,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -74,6 +71,7 @@ public class ImagesActivity extends AppCompatActivity implements ImageAdapter.On
                 });
 
     }
+
     @Override
     public void onItemClick(int position) {
         Toast.makeText(this, "Normal click at position: " + position, Toast.LENGTH_SHORT).show();
@@ -88,4 +86,10 @@ public class ImagesActivity extends AppCompatActivity implements ImageAdapter.On
     public void onDeleteClick(int position) {
         Toast.makeText(this, "Delete click at position: " + position, Toast.LENGTH_SHORT).show();
     }
+
+    public void onCommentClick(int position) {
+        Toast.makeText(this, "Commented " + position, Toast.LENGTH_SHORT).show();
+
+    }
 }
+
