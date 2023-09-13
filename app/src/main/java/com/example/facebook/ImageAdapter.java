@@ -1,6 +1,8 @@
 package com.example.facebook;
 
 import android.content.Context;
+import android.nfc.Tag;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -9,9 +11,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -36,11 +44,55 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
     public void onBindViewHolder(ImageViewHolder holder, int position) {
         Upload uploadCurrent = mUploads.get(position);
         holder.textViewName.setText(uploadCurrent.getName());
+        holder.like_text.setText(String.valueOf(uploadCurrent.getLikes())); // Display the likes count
+
         Picasso.get().load(uploadCurrent.getImageUrl())
                 .placeholder(R.mipmap.ic_launcher)
                 .fit()
                 .centerCrop()
                 .into(holder.imageView);
+        if (holder.like_btn != null) {
+            holder.like_btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        int updatedLikes = uploadCurrent.getLikes() + 1;
+                        holder.like_text.setText(String.valueOf(updatedLikes));
+                        if (updatedLikes == 0) {
+                            holder.like_btn.setImageResource(R.drawable.baseline_favorite_border_24);
+                        } else {
+                            holder.like_btn.setImageResource(R.drawable.baseline_favorite_24);
+                        }
+
+                        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+                        String documentId = uploadCurrent.getKey();
+//                        Log.d("DocumentID", "Document ID: " + documentId); // Print the document ID
+                        DocumentReference documentRef = firestore.collection("uploads")
+                                .document(documentId);
+
+                        documentRef.update("likes", updatedLikes)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Toast.makeText(mContext,"You Liked the Image", Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        e.printStackTrace();
+                                        Toast.makeText(mContext, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        Toast.makeText(mContext, "Error: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        } else {
+            Toast.makeText(mContext, "Error: Like button or Upload is null", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -52,12 +104,16 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             View.OnCreateContextMenuListener, MenuItem.OnMenuItemClickListener {
         public TextView textViewName;
         public ImageView imageView;
+        private final ImageView like_btn ;
+        private final TextView like_text;
 
         public ImageViewHolder(View itemView) {
             super(itemView);
 
             textViewName = itemView.findViewById(R.id.text_view_name);
             imageView = itemView.findViewById(R.id.image_view_upload);
+            like_text = itemView.findViewById(R.id.like_text);
+            like_btn = itemView.findViewById(R.id.like_btn);
 
             itemView.setOnClickListener(this);
             itemView.setOnCreateContextMenuListener(this);

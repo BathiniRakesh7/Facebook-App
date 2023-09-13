@@ -7,6 +7,8 @@ public class Upload {
     private String mImageUrl;
     private String mKey;
 
+    private int mLikes;
+
     public Upload() {
         //empty constructor needed
     }
@@ -35,6 +37,15 @@ public class Upload {
     public void setImageUrl(String imageUrl) {
         mImageUrl = imageUrl;
     }
+
+    public int getLikes() {
+        return mLikes;
+    }
+
+    public void setLikes(int likes) {
+        mLikes = likes;
+    }
+
 
     @Exclude
     public String getKey() {

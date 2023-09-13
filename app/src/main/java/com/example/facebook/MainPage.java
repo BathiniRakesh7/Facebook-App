@@ -154,13 +154,29 @@ public class MainPage extends AppCompatActivity {
                                     String downloadUrl = uri.toString();
 
                                     Upload upload = new Upload(fileName, downloadUrl);
+                                    upload.setLikes(0);
+
 
                                     mDatabaseRef.collection("uploads")
                                             .add(upload)
                                             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                                 @Override
                                                 public void onSuccess(DocumentReference documentReference) {
-                                                    Toast.makeText(MainPage.this, "Upload successful", Toast.LENGTH_LONG).show();
+                                                    String key = documentReference.getId();
+                                                    upload.setKey(key);
+                                                    documentReference.set(upload).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void unused) {
+                                                            Toast.makeText(MainPage.this, "Upload successful", Toast.LENGTH_LONG).show();
+                                                        }
+                                                    }).addOnFailureListener(new OnFailureListener() {
+                                                        @Override
+                                                        public void onFailure(@NonNull Exception e) {
+                                                            Toast.makeText(MainPage.this, "Upload failed", Toast.LENGTH_LONG).show();
+
+                                                        }
+                                                    });
+
                                                 }
                                             })
                                             .addOnFailureListener(new OnFailureListener() {
