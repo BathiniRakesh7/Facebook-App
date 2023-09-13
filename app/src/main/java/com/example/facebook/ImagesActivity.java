@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -32,6 +33,7 @@ public class ImagesActivity extends AppCompatActivity implements ImageAdapter.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("ImagesActivity", "onCreate called");
         setContentView(R.layout.activity_images_actvity);
 
         mRecyclerView = findViewById(R.id.recycler_view);
@@ -41,6 +43,9 @@ public class ImagesActivity extends AppCompatActivity implements ImageAdapter.On
         mProgressCircle = findViewById(R.id.progress_circle);
 
         mUploads = new ArrayList<>();
+        mAdapter = new ImageAdapter(ImagesActivity.this, mUploads);
+        mRecyclerView.setAdapter(mAdapter);
+        mAdapter.setOnItemClickListener(ImagesActivity.this);
 
         mDatabaseRef = FirebaseFirestore.getInstance();
 
@@ -50,15 +55,12 @@ public class ImagesActivity extends AppCompatActivity implements ImageAdapter.On
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                        List<Upload> mUploads = new ArrayList<>();
+                        mUploads.clear();
                         for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                             Upload upload = document.toObject(Upload.class);
                             mUploads.add(upload);
                         }
-
-                        mAdapter = new ImageAdapter(ImagesActivity.this, mUploads);
-                        mRecyclerView.setAdapter(mAdapter);
-                        mAdapter.setOnItemClickListener(ImagesActivity.this);
+                        mAdapter.notifyDataSetChanged();
                         mProgressCircle.setVisibility(View.INVISIBLE);
                     }
                 })
@@ -88,8 +90,6 @@ public class ImagesActivity extends AppCompatActivity implements ImageAdapter.On
     }
 
     public void onCommentClick(int position) {
-        Toast.makeText(this, "Commented " + position, Toast.LENGTH_SHORT).show();
-
     }
 }
 

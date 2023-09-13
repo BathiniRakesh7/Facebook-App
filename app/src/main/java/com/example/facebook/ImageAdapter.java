@@ -2,6 +2,7 @@ package com.example.facebook;
 
 import android.content.Context;
 ;
+import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -9,6 +10,7 @@ import android.view.ViewGroup;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,11 +20,19 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.squareup.picasso.Picasso;
 
+import org.w3c.dom.Comment;
+
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
     private Context mContext;
@@ -102,12 +112,55 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                     int adapterPosition = holder.getAdapterPosition();
                     if (adapterPosition != RecyclerView.NO_POSITION) {
                         mListener.onCommentClick(adapterPosition);
+                        String commentText = holder.comment_text.getText().toString().trim();
+                        if (!TextUtils.isEmpty(commentText)) {
+                            saveCommentToFirestore(uploadCurrent.getKey(), commentText);
+                            holder.comment_text.setText("");
+                        } else {
+                            Toast.makeText(mContext, "Please enter a comment.", Toast.LENGTH_SHORT).show();
+                        }
+
                     }
 
                 }
             }
         });
     }
+    private void saveCommentToFirestore(String uploadKey, String commentText) {
+        if (!TextUtils.isEmpty(commentText)) {
+            Timestamp timestamp = new Timestamp(new Date());
+            Map<String, Object> comment = new HashMap<>();
+            comment.put("text", commentText);
+            comment.put("timestamp", timestamp);
+
+            // Save the comment to Firebase Firestore
+            FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+            CollectionReference uploadsRef = firestore.collection("uploads");
+
+            // Get a reference to the specific document in the "uploads" collection
+            DocumentReference documentRef = uploadsRef.document(uploadKey);
+
+            // Update the comments field of the document by appending the new comment
+            documentRef.update("comments", FieldValue.arrayUnion(comment))
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            // Comment saved successfully
+                            Toast.makeText(mContext, "Comment posted.", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            // Error occurred while saving the comment
+                            Toast.makeText(mContext, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        } else {
+            Toast.makeText(mContext, "Please enter a comment.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
 
     @Override
@@ -123,6 +176,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         private final TextView like_text;
         public Button commentBtn;
         public RecyclerView recyclerViewComments;
+        public EditText comment_text;
 
         public ImageViewHolder(View itemView) {
             super(itemView);
@@ -133,6 +187,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             like_btn = itemView.findViewById(R.id.like_btn);
             commentBtn = itemView.findViewById(R.id.button_post_comment);
             recyclerViewComments = itemView.findViewById(R.id.recycler_view_comments);
+            comment_text = itemView.findViewById(R.id.edit_text_comment);
 
             itemView.setOnClickListener(this);
             itemView.setOnCreateContextMenuListener(this);
