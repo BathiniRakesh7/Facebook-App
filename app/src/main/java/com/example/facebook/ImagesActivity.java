@@ -33,7 +33,6 @@ public class ImagesActivity extends AppCompatActivity implements ImageAdapter.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("ImagesActivity", "onCreate called");
         setContentView(R.layout.activity_images_actvity);
 
         mRecyclerView = findViewById(R.id.recycler_view);

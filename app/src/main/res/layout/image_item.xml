@@ -70,6 +70,13 @@
                 android:layout_marginTop="8dp"
                 android:hint="Add a comment..."
                 android:minHeight="48dp" />
+            <TextView
+                android:id="@+id/text_view_entered_comments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Entered Comments:"
+                android:textSize="18sp" />
 
             <Button
                 android:id="@+id/button_post_comment"

@@ -3,6 +3,7 @@ package com.example.facebook;
 import android.content.Context;
 ;
 import android.text.TextUtils;
+
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,6 +24,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.squareup.picasso.Picasso;
@@ -61,6 +63,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                 .fit()
                 .centerCrop()
                 .into(holder.imageView);
+        holder.loadComments(uploadCurrent.getKey(), holder.enteredComment);
+
 
         if (holder.like_btn != null) {
             holder.like_btn.setOnClickListener(new View.OnClickListener() {
@@ -115,6 +119,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                         String commentText = holder.comment_text.getText().toString().trim();
                         if (!TextUtils.isEmpty(commentText)) {
                             saveCommentToFirestore(uploadCurrent.getKey(), commentText);
+                            holder.loadComments(uploadCurrent.getKey(), holder.enteredComment);
+
                             holder.comment_text.setText("");
                         } else {
                             Toast.makeText(mContext, "Please enter a comment.", Toast.LENGTH_SHORT).show();
@@ -128,11 +134,6 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
     }
     private void saveCommentToFirestore(String uploadKey, String commentText) {
         if (!TextUtils.isEmpty(commentText)) {
-            Timestamp timestamp = new Timestamp(new Date());
-            Map<String, Object> comment = new HashMap<>();
-            comment.put("text", commentText);
-            comment.put("timestamp", timestamp);
-
             // Save the comment to Firebase Firestore
             FirebaseFirestore firestore = FirebaseFirestore.getInstance();
             CollectionReference uploadsRef = firestore.collection("uploads");
@@ -141,7 +142,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             DocumentReference documentRef = uploadsRef.document(uploadKey);
 
             // Update the comments field of the document by appending the new comment
-            documentRef.update("comments", FieldValue.arrayUnion(comment))
+            documentRef.update("comments", FieldValue.arrayUnion(commentText))
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
@@ -177,6 +178,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         public Button commentBtn;
         public RecyclerView recyclerViewComments;
         public EditText comment_text;
+        public TextView enteredComment;
 
         public ImageViewHolder(View itemView) {
             super(itemView);
@@ -188,6 +190,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             commentBtn = itemView.findViewById(R.id.button_post_comment);
             recyclerViewComments = itemView.findViewById(R.id.recycler_view_comments);
             comment_text = itemView.findViewById(R.id.edit_text_comment);
+            enteredComment = itemView.findViewById(R.id.text_view_entered_comments);
 
             itemView.setOnClickListener(this);
             itemView.setOnCreateContextMenuListener(this);
@@ -231,6 +234,39 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             }
             return false;
         }
+        private void loadComments(String uploadKey, TextView enteredComment) {
+            FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+            CollectionReference uploadsRef = firestore.collection("uploads");
+            DocumentReference documentRef = uploadsRef.document(uploadKey);
+
+            documentRef.get()
+                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                        @Override
+                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+                            if (documentSnapshot.exists()) {
+                                List<String> comments = (List<String>) documentSnapshot.get("comments");
+                                if (comments != null && !comments.isEmpty()) {
+                                    StringBuilder commentText = new StringBuilder();
+                                    for (String comment : comments) {
+                                        commentText.append(comment).append("\n");
+                                    }
+                                    enteredComment.setText(commentText.toString());
+                                } else {
+                                    enteredComment.setText("No comments yet.");
+                                }
+                            } else {
+                                enteredComment.setText("Document does not exist.");
+                            }
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            enteredComment.setText("Error loading comments: " + e.getMessage());
+                        }
+                    });
+        }
+
     }
 
     public interface OnItemClickListener {
