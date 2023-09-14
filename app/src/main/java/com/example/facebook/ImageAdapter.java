@@ -67,21 +67,30 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
 
 
         if (holder.like_btn != null) {
+            final boolean[] isLiked = {false};
+            int initialLikeCount = uploadCurrent.getLikes();
+
+
             holder.like_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     try {
-                        int updatedLikes = uploadCurrent.getLikes() + 1;
-                        holder.like_text.setText(String.valueOf(updatedLikes));
-                        if (updatedLikes == 0) {
-                            holder.like_btn.setImageResource(R.drawable.baseline_favorite_border_24);
-                        } else {
+                        int updatedLikes = initialLikeCount;
+
+                        if (!isLiked[0]) {
+                            updatedLikes++;
                             holder.like_btn.setImageResource(R.drawable.baseline_favorite_24);
+                        } else {
+                            updatedLikes--;
+                            holder.like_btn.setImageResource(R.drawable.baseline_favorite_border_24);
+                            updatedLikes = initialLikeCount;
                         }
+
+                        holder.like_text.setText(String.valueOf(updatedLikes));
+                        isLiked[0] = !isLiked[0];
 
                         FirebaseFirestore firestore = FirebaseFirestore.getInstance();
                         String documentId = uploadCurrent.getKey();
-//                        Log.d("DocumentID", "Document ID: " + documentId); // Print the document ID
                         DocumentReference documentRef = firestore.collection("uploads")
                                 .document(documentId);
 
@@ -89,7 +98,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
-                                        Toast.makeText(mContext,"You Liked the Image", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(mContext, isLiked[0] ? "You Liked the Image" : "You Disliked the Image", Toast.LENGTH_SHORT).show();
                                     }
                                 })
                                 .addOnFailureListener(new OnFailureListener() {
@@ -104,6 +113,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                         Toast.makeText(mContext, "Error: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }
+
+
             });
         } else {
             Toast.makeText(mContext, "Error: Like button or Upload is null", Toast.LENGTH_SHORT).show();

@@ -77,6 +77,29 @@
                 android:layout_marginTop="8dp"
                 android:text="Entered Comments:"
                 android:textSize="18sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Like Button -->
+                <ImageView
+                    android:id="@+id/like_btn_entered_comment"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_marginEnd="10dp"
+                    android:contentDescription="TODO"
+                    android:src="@drawable/baseline_favorite_border_24" />
+
+                <!-- Reply Button -->
+                <ImageView
+                    android:id="@+id/reply_btn_entered_comment"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_marginStart="10dp"
+                    android:contentDescription="TODO"
+                    android:src="@drawable/baseline_reply_24" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/button_post_comment"
