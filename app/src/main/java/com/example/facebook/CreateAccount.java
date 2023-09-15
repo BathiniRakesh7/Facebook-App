@@ -3,15 +3,9 @@ package com.example.facebook;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.nfc.Tag;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -31,21 +25,19 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.ktx.Firebase;
 
 import java.util.HashMap;
 import java.util.Map;
-import android.content.Intent;
 
 public class CreateAccount extends AppCompatActivity {
 
     public static final String TAG = "Tag";
     static final int PICK_IMAGE_REQUEST = 1;
 
-    EditText FullName,Email,Password,Phone;
-    Button RegisterBtn,selectedImageBtn;
-    TextView LoginBtn;
-    FirebaseAuth Auth;
+    EditText fullName, email, password, phone;
+    Button registerBtn,selectedImageBtn;
+    TextView loginBtn;
+    FirebaseAuth auth;
     ProgressBar progressBar;
     FirebaseFirestore store;
     String userID;
@@ -59,56 +51,56 @@ public class CreateAccount extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.create_account);
 
-        FullName = findViewById(R.id.editTextname);
-        Email = findViewById(R.id.editTextEmail);
-        Password = findViewById(R.id.editTextPassword);
-        Phone = findViewById(R.id.editTextPhone);
-        RegisterBtn = findViewById(R.id.Registerbtn);
-        LoginBtn = findViewById(R.id.textCreateHere);
+        fullName = findViewById(R.id.editTextname);
+        email = findViewById(R.id.editTextEmail);
+        password = findViewById(R.id.editTextPassword);
+        phone = findViewById(R.id.editTextPhone);
+        registerBtn = findViewById(R.id.Registerbtn);
+        loginBtn = findViewById(R.id.textCreateHere);
         progressBar = findViewById(R.id.progressBar);
-        Auth = FirebaseAuth.getInstance();
+        auth = FirebaseAuth.getInstance();
         store =FirebaseFirestore.getInstance();
         profileImageView = findViewById(R.id.profileImageView);
         selectedImageBtn = findViewById(R.id.selectImageButton);
 
 
 
-        if (Auth.getCurrentUser()!= null){
+        if (auth.getCurrentUser()!= null){
             startActivity(new Intent(getApplicationContext(),MainActivity.class));
             finish();
 
         }
 
 
-        RegisterBtn.setOnClickListener(new View.OnClickListener() {
+        registerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String email = Email.getText().toString().trim();
-                String password = Password.getText().toString().trim();
-                String phone = Phone.getText().toString();
-                String name = FullName.getText().toString();
+                String email = CreateAccount.this.email.getText().toString().trim();
+                String password = CreateAccount.this.password.getText().toString().trim();
+                String phone = CreateAccount.this.phone.getText().toString();
+                String name = fullName.getText().toString();
 
                 if (TextUtils.isEmpty(email)){
-                    Email.setError("Email is Required");
+                    CreateAccount.this.email.setError("Email is Required");
                     return;
                 }
                 if (TextUtils.isEmpty(password)){
-                    Password.setError("Password is Required");
+                    CreateAccount.this.password.setError("Password is Required");
                     return;
                 }
                 if (password.length()<6){
-                    Password.setError("Password must be above 6 Characters");
+                    CreateAccount.this.password.setError("Password must be above 6 Characters");
                     return;
                 }
                 progressBar.setVisibility(View.VISIBLE);
 
-                Auth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                auth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
 
                         if (task.isSuccessful()){
                             Toast.makeText(CreateAccount.this, "User Created", Toast.LENGTH_SHORT).show();
-                            userID =Auth.getCurrentUser().getUid();
+                            userID = auth.getCurrentUser().getUid();
                             DocumentReference documentReference = store.collection("Users").document(userID);
                             Map<String,Object> user = new HashMap<>();
                             user.put("FullName",name);
@@ -140,7 +132,7 @@ public class CreateAccount extends AppCompatActivity {
             }
         });
 
-        LoginBtn.setOnClickListener(new View.OnClickListener() {
+        loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(getApplicationContext(), LoginAccount.class));

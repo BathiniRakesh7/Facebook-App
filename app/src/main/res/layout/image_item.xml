@@ -44,24 +44,13 @@
                 android:textSize="20dp"
                 android:id="@+id/like_text"/>
         </LinearLayout>
+
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginTop="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Comments"
-                android:textColor="@android:color/black"
-                android:textSize="18sp"
-                android:layout_marginBottom="8dp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view_comments"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
 
             <EditText
                 android:id="@+id/edit_text_comment"
@@ -70,34 +59,28 @@
                 android:layout_marginTop="8dp"
                 android:hint="Add a comment..."
                 android:minHeight="48dp" />
-            <TextView
-                android:id="@+id/text_view_entered_comments"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Entered Comments:"
-                android:textSize="18sp" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:id="@+id/comment_item_layout"
+                android:orientation="vertical">
 
-                <!-- Like Button -->
+                <TextView
+                    android:id="@+id/text_view_entered_comments"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="This is a comment" />
+
                 <ImageView
-                    android:id="@+id/like_btn_entered_comment"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:layout_marginEnd="10dp"
-                    android:contentDescription="TODO"
+                    android:id="@+id/button_like"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:src="@drawable/baseline_favorite_border_24" />
 
-                <!-- Reply Button -->
                 <ImageView
-                    android:id="@+id/reply_btn_entered_comment"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:layout_marginStart="10dp"
-                    android:contentDescription="TODO"
+                    android:id="@+id/button_reply"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:src="@drawable/baseline_reply_24" />
             </LinearLayout>
 

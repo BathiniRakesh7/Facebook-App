@@ -7,7 +7,6 @@ import static com.example.facebook.R.*;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -27,46 +26,46 @@ import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginAccount extends AppCompatActivity {
 
-    EditText Email, Password;
-    Button LoginBtn;
-    TextView CreateBtn;
+    EditText email, password;
+    Button loginBtn;
+    TextView createBtn;
     ProgressBar progressBar2;
-    FirebaseAuth Auth;
+    FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(layout.login_account);
-        Email = findViewById(R.id.editTextEmail);
-        Password = findViewById(R.id.editTextPassword);
-        LoginBtn = findViewById(R.id.loginbtn);
-        CreateBtn = findViewById(R.id.textCreateHere);
-        Email = findViewById(R.id.editTextEmail);
-        Auth = FirebaseAuth.getInstance();
+        email = findViewById(R.id.editTextEmail);
+        password = findViewById(R.id.editTextPassword);
+        loginBtn = findViewById(R.id.loginbtn);
+        createBtn = findViewById(R.id.textCreateHere);
+        email = findViewById(R.id.editTextEmail);
+        auth = FirebaseAuth.getInstance();
         progressBar2 = findViewById(R.id.progressBar2);
 
 
-        LoginBtn.setOnClickListener(new View.OnClickListener() {
+        loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                String email = Email.getText().toString().trim();
-                String password = Password.getText().toString().trim();
+                String email = LoginAccount.this.email.getText().toString().trim();
+                String password = LoginAccount.this.password.getText().toString().trim();
 
                 if (TextUtils.isEmpty(email)) {
-                    Email.setError("Email is Required");
+                    LoginAccount.this.email.setError("Email is Required");
                     return;
                 }
                 if (TextUtils.isEmpty(password)) {
-                    Password.setError("Password is Required");
+                    LoginAccount.this.password.setError("Password is Required");
                     return;
                 }
                 if (password.length() < 6) {
-                    Password.setError("Password must be above 6 Characters");
+                    LoginAccount.this.password.setError("Password must be above 6 Characters");
                     return;
                 }
                 progressBar2.setVisibility(View.VISIBLE);
-                Auth.signInWithEmailAndPassword(email, password)
+                auth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
@@ -88,7 +87,7 @@ public class LoginAccount extends AppCompatActivity {
         });
 
 
-        CreateBtn.setOnClickListener(new View.OnClickListener() {
+        createBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(getApplicationContext(), CreateAccount.class));

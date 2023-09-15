@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +36,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
     private Context mContext;
@@ -63,7 +65,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                 .fit()
                 .centerCrop()
                 .into(holder.imageView);
-        holder.loadComments(uploadCurrent.getKey(), holder.enteredComment);
+        holder.loadComments(uploadCurrent.getKey(), holder.comment_container);
+
 
 
         if (holder.like_btn != null) {
@@ -130,7 +133,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                         String commentText = holder.comment_text.getText().toString().trim();
                         if (!TextUtils.isEmpty(commentText)) {
                             saveCommentToFirestore(uploadCurrent.getKey(), commentText);
-                            holder.loadComments(uploadCurrent.getKey(), holder.enteredComment);
+                            holder.loadComments(uploadCurrent.getKey(), holder.comment_container);
+
 
                             holder.comment_text.setText("");
                         } else {
@@ -187,9 +191,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         private final ImageView like_btn ;
         private final TextView like_text;
         public Button commentBtn;
-        public RecyclerView recyclerViewComments;
         public EditText comment_text;
         public TextView enteredComment;
+        public ImageView comment_like_btn;
+        public ImageView comment_reply_btn;
+        public LinearLayout comment_container;
 
         public ImageViewHolder(View itemView) {
             super(itemView);
@@ -199,9 +205,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             like_text = itemView.findViewById(R.id.like_text);
             like_btn = itemView.findViewById(R.id.like_btn);
             commentBtn = itemView.findViewById(R.id.button_post_comment);
-            recyclerViewComments = itemView.findViewById(R.id.recycler_view_comments);
             comment_text = itemView.findViewById(R.id.edit_text_comment);
             enteredComment = itemView.findViewById(R.id.text_view_entered_comments);
+            comment_like_btn = itemView.findViewById(R.id.button_like);
+            comment_reply_btn = itemView.findViewById(R.id.button_reply);
+            comment_container = itemView.findViewById(R.id.comment_item_layout);
 
             itemView.setOnClickListener(this);
             itemView.setOnCreateContextMenuListener(this);
@@ -245,7 +253,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             }
             return false;
         }
-        private void loadComments(String uploadKey, TextView enteredComment) {
+        private void loadComments(String uploadKey, LinearLayout commentContainer) {
             FirebaseFirestore firestore = FirebaseFirestore.getInstance();
             CollectionReference uploadsRef = firestore.collection("uploads");
             DocumentReference documentRef = uploadsRef.document(uploadKey);
@@ -257,11 +265,78 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                             if (documentSnapshot.exists()) {
                                 List<String> comments = (List<String>) documentSnapshot.get("comments");
                                 if (comments != null && !comments.isEmpty()) {
-                                    StringBuilder commentText = new StringBuilder();
-                                    for (String comment : comments) {
-                                        commentText.append(comment).append("\n");
+                                    commentContainer.removeAllViews();
+
+                                    for (String commentText : comments) {
+                                        LinearLayout commentLayout = new LinearLayout(mContext);
+                                        commentLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT
+                                        ));
+                                        commentLayout.setOrientation(LinearLayout.VERTICAL);
+
+                                        TextView commentTextView = new TextView(mContext);
+                                        commentTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT
+                                        ));
+                                        commentTextView.setText(commentText);
+                                        LinearLayout buttonsLayout = new LinearLayout(mContext);
+                                        buttonsLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT
+                                        ));
+                                        buttonsLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+                                        ImageView likeButton = new ImageView(mContext);
+                                        likeButton.setLayoutParams(new LinearLayout.LayoutParams(
+                                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT
+                                        ));
+                                        likeButton.setImageResource(R.drawable.baseline_favorite_border_24);
+                                        TextView likeCountTextView = new TextView(mContext);
+                                        likeCountTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT
+                                        ));
+                                        likeCountTextView.setText("0");
+
+
+                                        AtomicBoolean isLiked = new AtomicBoolean(false);
+                                        final int[] likeCount = {0};
+                                        likeButton.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                if (!isLiked.get()) {
+                                                    likeButton.setImageResource(R.drawable.baseline_favorite_24);
+                                                    likeCount[0]++;
+                                                    likeCountTextView.setText(likeCount[0] + (likeCount[0] == 1 ? " like" : " likes"));
+                                                } else {
+                                                    likeButton.setImageResource(R.drawable.baseline_favorite_border_24);
+
+                                                    likeCount[0]--;
+                                                    likeCountTextView.setText(likeCount[0] + (likeCount[0] == 1 ? " like" : " likes"));
+                                                }
+                                                isLiked.set(!isLiked.get());
+                                            }
+                                        });
+
+                                        ImageView replyButton = new ImageView(mContext);
+                                        replyButton.setLayoutParams(new LinearLayout.LayoutParams(
+                                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT
+                                        ));
+                                        replyButton.setImageResource(R.drawable.baseline_reply_24);
+
+                                        buttonsLayout.addView(likeButton);
+                                        buttonsLayout.addView(likeCountTextView);
+                                        buttonsLayout.addView(replyButton);
+
+                                        commentLayout.addView(commentTextView);
+                                        commentLayout.addView(buttonsLayout); // Add the buttons layout
+
+                                        commentContainer.addView(commentLayout);
                                     }
-                                    enteredComment.setText(commentText.toString());
                                 } else {
                                     enteredComment.setText("No comments yet.");
                                 }
@@ -277,7 +352,6 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                         }
                     });
         }
-
     }
 
     public interface OnItemClickListener {
