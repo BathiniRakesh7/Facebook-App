@@ -26,6 +26,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.CollectionReference;
@@ -134,6 +136,8 @@ public class MainPage extends AppCompatActivity {
         if (mImageUri != null) {
             StorageReference fileReference = mStorageRef.child(System.currentTimeMillis()
                     + "." + getFileExtension(mImageUri));
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            String userEmail = user.getEmail();
 
             mUploadTask = fileReference.putFile(mImageUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -153,10 +157,8 @@ public class MainPage extends AppCompatActivity {
                                 public void onSuccess(Uri uri) {
                                     String downloadUrl = uri.toString();
 
-                                    Upload upload = new Upload(fileName, downloadUrl);
+                                    Upload upload = new Upload(fileName, downloadUrl,userEmail);
                                     upload.setLikes(0);
-
-
                                     mDatabaseRef.collection("uploads")
                                             .add(upload)
                                             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {

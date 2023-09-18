@@ -13,12 +13,15 @@ public class Upload {
     private int mLikes;
 
     private List<String> mComments;
+    private String mUserId;
+
+
 
     public Upload() {
         //empty constructor needed
     }
 
-    public Upload(String name, String imageUrl) {
+    public Upload(String name, String imageUrl, String userId) {
         if (name.trim().equals("")) {
             name = "No Name";
         }
@@ -26,6 +29,7 @@ public class Upload {
         mName = name;
         mImageUrl = imageUrl;
         mComments = new ArrayList<>();
+        mUserId = userId;
 
     }
 
@@ -59,6 +63,14 @@ public class Upload {
 
     public void setComments(List<String> comments) {
         mComments = comments;
+    }
+
+    public String getUserId() {
+        return mUserId;
+    }
+
+    public void setUserId(String userId) {
+        mUserId = userId;
     }
 
 

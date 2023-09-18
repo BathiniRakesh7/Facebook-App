@@ -190,11 +190,9 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         public ImageView imageView;
         private final ImageView like_btn ;
         private final TextView like_text;
-        public Button commentBtn;
+        public ImageView commentBtn;
         public EditText comment_text;
         public TextView enteredComment;
-        public ImageView comment_like_btn;
-        public ImageView comment_reply_btn;
         public LinearLayout comment_container;
 
         public ImageViewHolder(View itemView) {
@@ -207,8 +205,6 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             commentBtn = itemView.findViewById(R.id.button_post_comment);
             comment_text = itemView.findViewById(R.id.edit_text_comment);
             enteredComment = itemView.findViewById(R.id.text_view_entered_comments);
-            comment_like_btn = itemView.findViewById(R.id.button_like);
-            comment_reply_btn = itemView.findViewById(R.id.button_reply);
             comment_container = itemView.findViewById(R.id.comment_item_layout);
 
             itemView.setOnClickListener(this);
