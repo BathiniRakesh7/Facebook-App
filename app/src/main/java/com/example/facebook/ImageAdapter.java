@@ -2,6 +2,7 @@ package com.example.facebook;
 
 import android.content.Context;
 ;
+import android.graphics.Typeface;
 import android.text.TextUtils;
 
 import android.view.ContextMenu;
@@ -14,6 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,7 +24,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -30,11 +39,12 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Comment;
-
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -130,25 +140,58 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                     int adapterPosition = holder.getAdapterPosition();
                     if (adapterPosition != RecyclerView.NO_POSITION) {
                         mListener.onCommentClick(adapterPosition);
+                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                        if (user != null && user.getEmail() != null) {
+                            String userEmail = user.getEmail();
+                            FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+                            String userId = user.getUid();
+                            DocumentReference userRef = firestore.collection("Users").document(userId);
+
+                            userRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                @Override
+                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                    if (documentSnapshot.exists()) {
+                                        String fullName = documentSnapshot.getString("FullName");
+                                        if (fullName != null) {
                         String commentText = holder.comment_text.getText().toString().trim();
+                                            Date currentTime = new Date();
                         if (!TextUtils.isEmpty(commentText)) {
-                            saveCommentToFirestore(uploadCurrent.getKey(), commentText);
+                                                Comments newComment = new Comments(commentText, userEmail,  currentTime.getTime());
+                                                newComment.setUserName(fullName);
+                                                newComment.setLikes(new ArrayList<>());
+                                                newComment.setReplies(new ArrayList<>());
+                                                saveCommentToFirestore(uploadCurrent.getKey(), newComment);
                             holder.loadComments(uploadCurrent.getKey(), holder.comment_container);
-
-
                             holder.comment_text.setText("");
+
                         } else {
                             Toast.makeText(mContext, "Please enter a comment.", Toast.LENGTH_SHORT).show();
                         }
+                                        } else {
+                                            Toast.makeText(mContext, "User full name is missing.", Toast.LENGTH_SHORT).show();
+                                        }
+                                    } else {
+                                        Toast.makeText(mContext, "User document does not exist.", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    // Handle any errors that occurred while fetching user data
+                                    Toast.makeText(mContext, "Error fetching user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
 
+                        } else {
+                            Toast.makeText(mContext, "Please enter a comment.", Toast.LENGTH_SHORT).show();
+                        }
                     }
-
                 }
             }
         });
     }
-    private void saveCommentToFirestore(String uploadKey, String commentText) {
-        if (!TextUtils.isEmpty(commentText)) {
+    private void saveCommentToFirestore(String uploadKey,  Comments comment) {
+        if (comment != null) {
             // Save the comment to Firebase Firestore
             FirebaseFirestore firestore = FirebaseFirestore.getInstance();
             CollectionReference uploadsRef = firestore.collection("uploads");
@@ -157,7 +200,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             DocumentReference documentRef = uploadsRef.document(uploadKey);
 
             // Update the comments field of the document by appending the new comment
-            documentRef.update("comments", FieldValue.arrayUnion(commentText))
+            documentRef.update("comments", FieldValue.arrayUnion(comment))
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
@@ -259,11 +302,39 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                         @Override
                         public void onSuccess(DocumentSnapshot documentSnapshot) {
                             if (documentSnapshot.exists()) {
-                                List<String> comments = (List<String>) documentSnapshot.get("comments");
-                                if (comments != null && !comments.isEmpty()) {
+                                List<Map<String, Object>> commentsList = (List<Map<String, Object>>) documentSnapshot.get("comments");
+                                if (commentsList != null && !commentsList.isEmpty()) {
                                     commentContainer.removeAllViews();
 
-                                    for (String commentText : comments) {
+                                    for (Map<String, Object> commentData : commentsList) {
+                                        String fullName = (String) commentData.get("userName");
+                                        String commentText = (String) commentData.get("commentText");
+                                        long timestamp = (long) commentData.get("timestamp");
+
+                                        long currentTime = System.currentTimeMillis();
+                                        long timeDifference = currentTime - timestamp;
+
+                                        long minuteInMillis = 60 * 1000;
+                                        long hourInMillis = 60 * minuteInMillis;
+                                        long dayInMillis = 24 * hourInMillis;
+
+                                        String timeAgo;
+
+                                        if (timeDifference < minuteInMillis) {
+                                            timeAgo = "just now";
+                                        } else if (timeDifference < 2 * minuteInMillis) {
+                                            timeAgo = "1 minute ago";
+                                        } else if (timeDifference < hourInMillis) {
+                                            timeAgo = (timeDifference / minuteInMillis) + " mins ago";
+                                        } else if (timeDifference < 2 * hourInMillis) {
+                                            timeAgo = "1 hour ago";
+                                        } else if (timeDifference < dayInMillis) {
+                                            timeAgo = (timeDifference / hourInMillis) + " hours ago";
+                                        } else {
+                                            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm", Locale.getDefault());
+                                            timeAgo = sdf.format(new Date(timestamp));
+                                        }
+
                                         LinearLayout commentLayout = new LinearLayout(mContext);
                                         commentLayout.setLayoutParams(new LinearLayout.LayoutParams(
                                                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -271,12 +342,28 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                                         ));
                                         commentLayout.setOrientation(LinearLayout.VERTICAL);
 
+                                        TextView fullNameTextView = new TextView(mContext);
+                                        fullNameTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT
+                                        ));
+                                        fullNameTextView.setText(fullName);
+                                        fullNameTextView.setTextSize(12);
                                         TextView commentTextView = new TextView(mContext);
                                         commentTextView.setLayoutParams(new LinearLayout.LayoutParams(
                                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                                 LinearLayout.LayoutParams.WRAP_CONTENT
                                         ));
                                         commentTextView.setText(commentText);
+                                        commentTextView.setTypeface(null, Typeface.BOLD);
+                                        TextView timestampTextView = new TextView(mContext);
+                                        timestampTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT
+                                        ));
+                                        timestampTextView.setText(timeAgo);
+                                        timestampTextView.setTextSize(12);
+
                                         LinearLayout buttonsLayout = new LinearLayout(mContext);
                                         buttonsLayout.setLayoutParams(new LinearLayout.LayoutParams(
                                                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -296,8 +383,6 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                                                 LinearLayout.LayoutParams.WRAP_CONTENT
                                         ));
                                         likeCountTextView.setText("0");
-
-
                                         AtomicBoolean isLiked = new AtomicBoolean(false);
                                         final int[] likeCount = {0};
                                         likeButton.setOnClickListener(new View.OnClickListener() {
@@ -309,14 +394,12 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                                                     likeCountTextView.setText(likeCount[0] + (likeCount[0] == 1 ? " like" : " likes"));
                                                 } else {
                                                     likeButton.setImageResource(R.drawable.baseline_favorite_border_24);
-
                                                     likeCount[0]--;
                                                     likeCountTextView.setText(likeCount[0] + (likeCount[0] == 1 ? " like" : " likes"));
                                                 }
                                                 isLiked.set(!isLiked.get());
                                             }
                                         });
-
                                         ImageView replyButton = new ImageView(mContext);
                                         replyButton.setLayoutParams(new LinearLayout.LayoutParams(
                                                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -328,9 +411,10 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                                         buttonsLayout.addView(likeCountTextView);
                                         buttonsLayout.addView(replyButton);
 
+                                        commentLayout.addView(fullNameTextView);
                                         commentLayout.addView(commentTextView);
-                                        commentLayout.addView(buttonsLayout); // Add the buttons layout
-
+                                        commentLayout.addView(timestampTextView);
+                                        commentLayout.addView(buttonsLayout);
                                         commentContainer.addView(commentLayout);
                                     }
                                 } else {
@@ -348,6 +432,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
                         }
                     });
         }
+
+
     }
 
     public interface OnItemClickListener {

@@ -1,18 +1,26 @@
 package com.example.facebook;
 
 public class Reply {
-    private String replyId;
-    private String userId;
-    private String text;
-    private long timestamp;
-    private int likes;
+    private String replyText;
+    private String userId; // User ID of the user who replied
+    private long timestamp; // Timestamp of the reply
 
-    public String getReplyId() {
-        return replyId;
+    public Reply() {
+        // Default constructor required for Firebase
     }
 
-    public void setReplyId(String replyId) {
-        this.replyId = replyId;
+    public Reply(String replyText, String userId, long timestamp) {
+        this.replyText = replyText;
+        this.userId = userId;
+        this.timestamp = timestamp;
+    }
+
+    public String getReplyText() {
+        return replyText;
+    }
+
+    public void setReplyText(String replyText) {
+        this.replyText = replyText;
     }
 
     public String getUserId() {
@@ -23,14 +31,6 @@ public class Reply {
         this.userId = userId;
     }
 
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
-    }
-
     public long getTimestamp() {
         return timestamp;
     }
@@ -38,18 +38,4 @@ public class Reply {
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
-
-    public int getLikes() {
-        return likes;
-    }
-
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
-
-    public Reply() {
-
-    }
-
-
 }

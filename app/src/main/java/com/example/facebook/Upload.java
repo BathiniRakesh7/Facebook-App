@@ -12,7 +12,8 @@ public class Upload {
 
     private int mLikes;
 
-    private List<String> mComments;
+    private List<Comments> mComments;
+
     private String mUserId;
 
 
@@ -57,11 +58,11 @@ public class Upload {
         mLikes = likes;
     }
 
-    public List<String> getComments() {
+    public List<Comments> getComments() {
         return mComments;
     }
 
-    public void setComments(List<String> comments) {
+    public void setComments(List<Comments> comments) {
         mComments = comments;
     }
 

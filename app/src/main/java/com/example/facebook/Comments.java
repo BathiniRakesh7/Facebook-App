@@ -1,36 +1,34 @@
 package com.example.facebook;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class Comment {
-    private String commentId;
+public class Comments {
+    private String commentText;
     private String userId;
-    private String text;
     private long timestamp;
-    private int likes;
+    private List<Like> likes;
     private List<Reply> replies;
+    private String userName;
 
-    public Comment() {
+
+    public Comments() {
         // Default constructor required for Firebase
     }
 
-
-    public Comment(String commentId, String userId, String text, long timestamp) {
-        this.commentId = commentId;
+    public Comments(String commentText, String userId, long timestamp) {
+        this.commentText = commentText;
         this.userId = userId;
-        this.text = text;
         this.timestamp = timestamp;
-        this.likes = 0; // Initialize likes to 0
-        this.replies = new ArrayList<>();
+//        this.likes = new ArrayList<>();
+//        this.replies = new ArrayList<>();
     }
 
-    public String getCommentId() {
-        return commentId;
+    public String getCommentText() {
+        return commentText;
     }
 
-    public void setCommentId(String commentId) {
-        this.commentId = commentId;
+    public void setCommentText(String commentText) {
+        this.commentText = commentText;
     }
 
     public String getUserId() {
@@ -41,14 +39,6 @@ public class Comment {
         this.userId = userId;
     }
 
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
-    }
-
     public long getTimestamp() {
         return timestamp;
     }
@@ -57,11 +47,11 @@ public class Comment {
         this.timestamp = timestamp;
     }
 
-    public int getLikes() {
+    public List<Like> getLikes() {
         return likes;
     }
 
-    public void setLikes(int likes) {
+    public void setLikes(List<Like> likes) {
         this.likes = likes;
     }
 
@@ -71,5 +61,13 @@ public class Comment {
 
     public void setReplies(List<Reply> replies) {
         this.replies = replies;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 }
