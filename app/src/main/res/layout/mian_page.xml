@@ -4,13 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
     tools:context=".MainPage">
+    <include
+        layout="@layout/app_bar_layout"
+        android:id="@+id/update_post_toolbar">
+
+    </include>
 
     <Button
         android:id="@+id/button_choose_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/update_post_toolbar"
         android:text="Choose file" />
 
     <EditText
@@ -19,6 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_toEndOf="@+id/button_choose_image"
+        android:layout_below="@+id/update_post_toolbar"
         android:hint="Enter file name" />
 
     <ImageView

@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
@@ -62,6 +63,7 @@ public class MainPage extends AppCompatActivity {
     private StorageReference mStorageRef;
     private FirebaseFirestore mDatabaseRef;
     private StorageTask mUploadTask;
+    private Toolbar mToolBar;
 
 
     @Override
@@ -69,6 +71,11 @@ public class MainPage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mian_page);
 
+        mToolBar = findViewById(R.id.update_post_toolbar);
+        setSupportActionBar(mToolBar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setTitle("Upload Post");
 
         mButtonChooseImage = findViewById(R.id.button_choose_image);
         mButtonUpload = findViewById(R.id.button_upload);
@@ -92,7 +99,7 @@ public class MainPage extends AppCompatActivity {
                 if (mUploadTask != null && mUploadTask.isInProgress()) {
                     Toast.makeText(MainPage.this, "Upload in progress", Toast.LENGTH_SHORT).show();
                 } else {
-                    uploadFile();
+//                    uploadFile();
                 }
 
             }
@@ -105,6 +112,21 @@ public class MainPage extends AppCompatActivity {
 
             }
         });
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        if(id == android.R.id.home){
+            SendUserMainActivity();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void SendUserMainActivity() {
+        Intent mainIntent = new Intent(this,MainActivity.class);
+        startActivity(mainIntent);
     }
 
     private void openFileChooser() {
@@ -132,90 +154,90 @@ public class MainPage extends AppCompatActivity {
         return mime.getExtensionFromMimeType(cR.getType(uri));
     }
 
-    private void uploadFile() {
-        if (mImageUri != null) {
-            StorageReference fileReference = mStorageRef.child(System.currentTimeMillis()
-                    + "." + getFileExtension(mImageUri));
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            String userEmail = user.getEmail();
-
-            mUploadTask = fileReference.putFile(mImageUri)
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mProgressBar.setProgress(0);
-                                }
-                            }, 500);
-
-                            String fileName = mEditTextFileName.getText().toString().trim();
-                            taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-                                    String downloadUrl = uri.toString();
-
-                                    Upload upload = new Upload(fileName, downloadUrl,userEmail);
-                                    upload.setLikes(0);
-                                    mDatabaseRef.collection("uploads")
-                                            .add(upload)
-                                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                                @Override
-                                                public void onSuccess(DocumentReference documentReference) {
-                                                    String key = documentReference.getId();
-                                                    upload.setKey(key);
-                                                    documentReference.set(upload).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                        @Override
-                                                        public void onSuccess(Void unused) {
-                                                            Toast.makeText(MainPage.this, "Upload successful", Toast.LENGTH_LONG).show();
-                                                        }
-                                                    }).addOnFailureListener(new OnFailureListener() {
-                                                        @Override
-                                                        public void onFailure(@NonNull Exception e) {
-                                                            Toast.makeText(MainPage.this, "Upload failed", Toast.LENGTH_LONG).show();
-
-                                                        }
-                                                    });
-
-                                                }
-                                            })
-                                            .addOnFailureListener(new OnFailureListener() {
-                                                @Override
-                                                public void onFailure(@NonNull Exception e) {
-                                                    Toast.makeText(MainPage.this, "Upload failed", Toast.LENGTH_LONG).show();
-                                                }
-                                            });
-                                }
-                            }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    // Handle the failure to get the download URL
-                                    Toast.makeText(MainPage.this, "Failed to get download URL", Toast.LENGTH_LONG).show();
-                                }
-                            });
-
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(MainPage.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnProgressListener(new com.google.firebase.storage.OnProgressListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
-                            double progress = (100.0 * snapshot.getBytesTransferred() / snapshot.getTotalByteCount());
-                            mProgressBar.setProgress((int) progress);
-                        }
-                    });
-
-        } else {
-            Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show();
-        }
-    }
+//    private void uploadFile() {
+//        if (mImageUri != null) {
+//            StorageReference fileReference = mStorageRef.child(System.currentTimeMillis()
+//                    + "." + getFileExtension(mImageUri));
+//            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+//            String userEmail = user.getEmail();
+//
+//            mUploadTask = fileReference.putFile(mImageUri)
+//                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+//                        @Override
+//                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+//                            Handler handler = new Handler();
+//                            handler.postDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    mProgressBar.setProgress(0);
+//                                }
+//                            }, 500);
+//
+//                            String fileName = mEditTextFileName.getText().toString().trim();
+//                            taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+//                                @Override
+//                                public void onSuccess(Uri uri) {
+//                                    String downloadUrl = uri.toString();
+//
+////                                    Upload upload = new Upload(fileName, downloadUrl,userEmail);
+//                                    upload.setLikes(0);
+//                                    mDatabaseRef.collection("uploads")
+//                                            .add(upload)
+//                                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+//                                                @Override
+//                                                public void onSuccess(DocumentReference documentReference) {
+//                                                    String key = documentReference.getId();
+//                                                    upload.setKey(key);
+//                                                    documentReference.set(upload).addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                                        @Override
+//                                                        public void onSuccess(Void unused) {
+//                                                            Toast.makeText(MainPage.this, "Upload successful", Toast.LENGTH_LONG).show();
+//                                                        }
+//                                                    }).addOnFailureListener(new OnFailureListener() {
+//                                                        @Override
+//                                                        public void onFailure(@NonNull Exception e) {
+//                                                            Toast.makeText(MainPage.this, "Upload failed", Toast.LENGTH_LONG).show();
+//
+//                                                        }
+//                                                    });
+//
+//                                                }
+//                                            })
+//                                            .addOnFailureListener(new OnFailureListener() {
+//                                                @Override
+//                                                public void onFailure(@NonNull Exception e) {
+//                                                    Toast.makeText(MainPage.this, "Upload failed", Toast.LENGTH_LONG).show();
+//                                                }
+//                                            });
+//                                }
+//                            }).addOnFailureListener(new OnFailureListener() {
+//                                @Override
+//                                public void onFailure(@NonNull Exception e) {
+//                                    // Handle the failure to get the download URL
+//                                    Toast.makeText(MainPage.this, "Failed to get download URL", Toast.LENGTH_LONG).show();
+//                                }
+//                            });
+//
+//                        }
+//                    })
+//                    .addOnFailureListener(new OnFailureListener() {
+//                        @Override
+//                        public void onFailure(@NonNull Exception e) {
+//                            Toast.makeText(MainPage.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+//                        }
+//                    })
+//                    .addOnProgressListener(new com.google.firebase.storage.OnProgressListener<UploadTask.TaskSnapshot>() {
+//                        @Override
+//                        public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+//                            double progress = (100.0 * snapshot.getBytesTransferred() / snapshot.getTotalByteCount());
+//                            mProgressBar.setProgress((int) progress);
+//                        }
+//                    });
+//
+//        } else {
+//            Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show();
+//        }
+//    }
 
     private void openImagesActivity() {
         Intent intent = new Intent(this, ImagesActivity.class);

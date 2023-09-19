@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Upload {
-    private String mName;
+    private String description;
     private String mImageUrl;
+    private String userName; // Add this field
+
     private String mKey;
 
     private int mLikes;
@@ -15,6 +17,8 @@ public class Upload {
     private List<Comments> mComments;
 
     private String mUserId;
+    private String uploadDate;
+    private String uploadTime;
 
 
 
@@ -22,24 +26,24 @@ public class Upload {
         //empty constructor needed
     }
 
-    public Upload(String name, String imageUrl, String userId) {
-        if (name.trim().equals("")) {
-            name = "No Name";
-        }
-
-        mName = name;
+    public Upload(String description, String imageUrl, String userId , String uploadDate, String uploadTime,String userName) {
+        this.userName = userName;
+        this.description = description;
         mImageUrl = imageUrl;
         mComments = new ArrayList<>();
         mUserId = userId;
+        this.uploadDate = uploadDate;
+        this.uploadTime = uploadTime;
 
     }
 
-    public String getName() {
-        return mName;
+
+    public String getDescription() {
+        return description;
     }
 
-    public void setName(String name) {
-        mName = name;
+    public void setDescription(String description) {
+        description = description;
     }
 
     public String getImageUrl() {
@@ -72,6 +76,30 @@ public class Upload {
 
     public void setUserId(String userId) {
         mUserId = userId;
+    }
+
+    public String getUploadDate() {
+        return uploadDate;
+    }
+
+    public void setUploadDate(String uploadDate) {
+        this.uploadDate = uploadDate;
+    }
+
+    public String getUploadTime() {
+        return uploadTime;
+    }
+
+    public void setUploadTime(String uploadTime) {
+        this.uploadTime = uploadTime;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
 

@@ -67,7 +67,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
     @Override
     public void onBindViewHolder(ImageViewHolder holder, int position) {
         Upload uploadCurrent = mUploads.get(position);
-        holder.textViewName.setText(uploadCurrent.getName());
+        holder.textViewName.setText(uploadCurrent.getDescription());
         holder.like_text.setText(String.valueOf(uploadCurrent.getLikes()));
 
         Picasso.get().load(uploadCurrent.getImageUrl())
