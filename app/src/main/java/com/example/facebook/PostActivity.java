@@ -5,37 +5,35 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PostActivity extends AppCompatActivity {
     private Toolbar mToolBar;
@@ -47,9 +45,11 @@ public class PostActivity extends AppCompatActivity {
     private EditText postDescription;
     private ProgressDialog uploadProgressBar;
 
-    private StorageReference mStorageRef;
-    private FirebaseFirestore mDatabaseRef;
-    private StorageTask mUploadTask;
+    private StorageReference postsImagesReference;
+
+
+
+    private String saveCurrentDate, saveCurrentTime, postRandomName, downloadUrl, current_user_id,Description;
 
 
     @Override
@@ -67,9 +67,9 @@ public class PostActivity extends AppCompatActivity {
         getSupportActionBar().setTitle("Upload Post");
         uploadProgressBar = new ProgressDialog(this);
 
+        StorageReference storageReference = FirebaseStorage.getInstance().getReference();
+        postsImagesReference = storageReference.child("Post Images");
 
-        mStorageRef = FirebaseStorage.getInstance().getReference("uploads");
-        mDatabaseRef = FirebaseFirestore.getInstance();
 
 
         selectPostImage.setOnClickListener(new View.OnClickListener() {
@@ -82,20 +82,14 @@ public class PostActivity extends AppCompatActivity {
         uploadPostButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String description = postDescription.getText().toString();
-                if (mUploadTask != null && mUploadTask.isInProgress()) {
-                    Toast.makeText(PostActivity.this, "Upload in progress", Toast.LENGTH_SHORT).show();
+                FirebaseAuth mAuth = FirebaseAuth.getInstance();
+                FirebaseUser currentUser = mAuth.getCurrentUser();
+                if (currentUser != null) {
+                    current_user_id = currentUser.getUid();
+                } else {
+                    Toast.makeText(PostActivity.this, "User is not authenticated.", Toast.LENGTH_SHORT).show();
                 }
-                else  if(TextUtils.isEmpty(description)){
-                    Toast.makeText(PostActivity.this, "Please write something about the post", Toast.LENGTH_SHORT).show();
-
-                }
-                else {
-                    uploadProgressBar.setTitle("Uploading Post");
-                    uploadProgressBar.setMessage("Please wait, while we are uploading your new post...");
-                    uploadProgressBar.show();
-                    uploadFile();
-                }
+                ValidatePostInfo();
             }
         });
 
@@ -131,111 +125,139 @@ public class PostActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private String getFileExtension(Uri uri) {
-        ContentResolver cR = getContentResolver();
-        MimeTypeMap mime = MimeTypeMap.getSingleton();
-        return mime.getExtensionFromMimeType(cR.getType(uri));
+
+    private void SavingPostInformationToFirestore() {
+        if (current_user_id == null || current_user_id.isEmpty()) {
+            Toast.makeText(PostActivity.this, "User ID is invalid.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference userRef = db.collection("Users").document(current_user_id);
+
+        userRef.get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        if (documentSnapshot.exists()) {
+                            String userFullName = documentSnapshot.getString("FullName");
+
+                            if (userFullName != null) {
+                                Map<String, Object> post = new HashMap<>();
+                                post.put("uid", current_user_id);
+                                post.put("date", saveCurrentDate);
+                                post.put("time", saveCurrentTime);
+                                post.put("description", Description);
+                                post.put("postImage", downloadUrl);
+                                post.put("fullName", userFullName);
+
+                                try {
+                                    db.collection("Posts")
+                                            .add(post)
+                                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                @Override
+                                                public void onSuccess(DocumentReference documentReference) {
+                                                    SendUserMainActivity();
+                                                    Toast.makeText(PostActivity.this, "New Post is updated successfully.", Toast.LENGTH_SHORT).show();
+                                                    uploadProgressBar.dismiss();
+                                                }
+                                            })
+                                            .addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Log.e("Firestore", "Error adding document: " + e.getMessage(), e);
+                                                    Toast.makeText(PostActivity.this, "Error Occurred while updating your post.", Toast.LENGTH_SHORT).show();
+                                                    uploadProgressBar.dismiss();
+                                                }
+                                            });
+                                } catch (Exception e) {
+                                    Log.e("Firestore", "Error: " + e.getMessage(), e);
+                                    Toast.makeText(PostActivity.this, "Error Occurred during Firestore operation.", Toast.LENGTH_SHORT).show();
+                                    uploadProgressBar.dismiss();
+                                }
+                            } else {
+                                Toast.makeText(PostActivity.this, "User's full name not found.", Toast.LENGTH_SHORT).show();
+                                uploadProgressBar.dismiss();
+                            }
+                        } else {
+                            Toast.makeText(PostActivity.this, "User data not found.", Toast.LENGTH_SHORT).show();
+                            uploadProgressBar.dismiss();
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("Firestore", "Error getting user data: " + e.getMessage(), e);
+                        Toast.makeText(PostActivity.this, "Error Occurred while fetching user data.", Toast.LENGTH_SHORT).show();
+                        uploadProgressBar.dismiss();
+                    }
+                });
     }
 
-    private void uploadFile() {
-        if (ImageUri != null) {
-            StorageReference fileReference = mStorageRef.child(System.currentTimeMillis()
-                    + "." + getFileExtension(ImageUri));
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            String userEmail = user.getEmail();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-            String uploadDate = dateFormat.format(Calendar.getInstance().getTime());
-            String uploadTime = timeFormat.format(Calendar.getInstance().getTime());
 
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            CollectionReference usersRef = db.collection("Users"); // Replace with your actual users collection name
 
-            usersRef.whereEqualTo("email", userEmail)
-                    .get()
-                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                        @Override
-                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                            if (!queryDocumentSnapshots.isEmpty()) {
-                                DocumentSnapshot userDoc = queryDocumentSnapshots.getDocuments().get(0);
-                                String userName = userDoc.getString("FullName");
-                                mUploadTask = fileReference.putFile(ImageUri)
-                                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                            @Override
-                                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                                String fileName = postDescription.getText().toString().trim();
-                                                taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                                    @Override
-                                                    public void onSuccess(Uri uri) {
-                                                        String downloadUrl = uri.toString();
 
-                                                        Upload upload = new Upload(fileName, downloadUrl, userEmail, uploadDate, uploadTime,userName);
-                                                        upload.setLikes(0);
+    private void ValidatePostInfo()
+    {
+        Description = postDescription.getText().toString();
 
-                                                        mDatabaseRef.collection("Uploads")
-                                                                .add(upload)
-                                                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                                                    @Override
-                                                                    public void onSuccess(DocumentReference documentReference) {
-                                                                        String key = documentReference.getId();
-                                                                        upload.setKey(key);
-                                                                        documentReference.set(upload).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                                            @Override
-                                                                            public void onSuccess(Void unused) {
-                                                                                Toast.makeText(PostActivity.this, "Upload successful", Toast.LENGTH_LONG).show();
-                                                                                uploadProgressBar.dismiss();
-                                                                            }
-                                                                        }).addOnFailureListener(new OnFailureListener() {
-                                                                            @Override
-                                                                            public void onFailure(@NonNull Exception e) {
-                                                                                Toast.makeText(PostActivity.this, "Upload failed", Toast.LENGTH_LONG).show();
-                                                                                uploadProgressBar.dismiss();
-                                                                            }
-                                                                        });
+        if(ImageUri == null)
+        {
+            Toast.makeText(this, "Please select post image...", Toast.LENGTH_SHORT).show();
+        }
+        else if(TextUtils.isEmpty(Description))
+        {
+            Toast.makeText(this, "Please say something about your image...", Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            uploadProgressBar.setTitle("Add New Post");
+            uploadProgressBar.setMessage("Please wait, while we are updating your new post...");
+            uploadProgressBar.show();
+            uploadProgressBar.setCanceledOnTouchOutside(true);
 
-                                                                    }
-                                                                })
-                                                                .addOnFailureListener(new OnFailureListener() {
-                                                                    @Override
-                                                                    public void onFailure(@NonNull Exception e) {
-                                                                        Toast.makeText(PostActivity.this, "Upload failed", Toast.LENGTH_LONG).show();
-                                                                    }
-                                                                });
-                                                    }
-                                                }).addOnFailureListener(new OnFailureListener() {
-                                                    @Override
-                                                    public void onFailure(@NonNull Exception e) {
-                                                        // Handle the failure to get the download URL
-                                                        Toast.makeText(PostActivity.this, "Failed to get download URL", Toast.LENGTH_LONG).show();
-                                                    }
-                                                });
-
-                                            }
-                                        })
-                                        .addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                                Toast.makeText(PostActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                            } else {
-                                // User not found in Firestore
-                                Toast.makeText(PostActivity.this, "User not found in Firestore", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            // Handle the failure to fetch the username
-                            Toast.makeText(PostActivity.this, "Failed to fetch username from Firestore", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-
-        } else {
-            Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show();
+            StoringImageToFirebaseStorage();
         }
     }
+
+    private void StoringImageToFirebaseStorage()
+    {
+        Calendar calFordDate = Calendar.getInstance();
+        SimpleDateFormat currentDate = new SimpleDateFormat("dd-MM-yyyy");
+        saveCurrentDate = currentDate.format(calFordDate.getTime());
+
+        Calendar calFordTime = Calendar.getInstance();
+        SimpleDateFormat currentTime = new SimpleDateFormat("HH:mm");
+        saveCurrentTime = currentTime.format(calFordDate.getTime());
+
+        postRandomName = saveCurrentDate + saveCurrentTime;
+
+        StorageReference filePath = postsImagesReference.child(ImageUri.getLastPathSegment() + postRandomName + ".jpg");
+
+        filePath.putFile(ImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task)
+            {
+                if(task.isSuccessful())
+                {
+                    filePath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            downloadUrl = uri.toString();
+                            Toast.makeText(PostActivity.this, "Image uploaded successfully to Storage...", Toast.LENGTH_SHORT).show();
+                            SavingPostInformationToFirestore();
+                        }
+                    });
+                }
+                else
+                {
+                    String message = task.getException().getMessage();
+                    Toast.makeText(PostActivity.this, "Error occurred: " + message, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
 
     private void SendUserMainActivity() {
         Intent mainIntent = new Intent(this,MainActivity.class);

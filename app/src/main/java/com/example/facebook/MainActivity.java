@@ -17,12 +17,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.firebase.ui.database.FirebaseRecyclerAdapter;
-import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -31,6 +27,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
+import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
+import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 
 public class MainActivity extends AppCompatActivity {
     private NavigationView navigationView;
@@ -41,9 +41,16 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView postList;
     private Toolbar mToolbar;
     private FirebaseAuth mAuth;
-    private DatabaseReference userRef,postRef;
+
+    private DatabaseReference userRef;
 
     String currentUserId;
+    private int currentLikes = 0;
+
+
+
+    private FirebaseFirestore firestore;
+    private FirestoreRecyclerAdapter<Posts, PostsViewHolder> adapter;
 
 
     @Override
@@ -51,14 +58,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mAuth = FirebaseAuth.getInstance();
+        firestore = FirebaseFirestore.getInstance();
+
         currentUserId = mAuth.getCurrentUser().getUid();
         userRef = FirebaseDatabase.getInstance().getReference().child("Users");
-        postRef = FirebaseDatabase.getInstance().getReference().child("Uploads");
-
         mToolbar = findViewById(R.id.main_page_tool_bar);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setTitle("Home");
-        drawerLayout = (DrawerLayout) findViewById(R.id.drawable_layout);
+        drawerLayout = findViewById(R.id.drawable_layout);
 
         addNewPostButton = findViewById(R.id.add_new_post_button);
 
@@ -69,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
-        navigationView = (NavigationView) findViewById(R.id.navigation_view);
+        navigationView = findViewById(R.id.navigation_view);
         userFullName = findViewById(R.id.nav_user_full_name);
 
         View navigationHeaderView = navigationView.inflateHeaderView(R.layout.navigation_header);
@@ -83,8 +90,6 @@ public class MainActivity extends AppCompatActivity {
         postList.setLayoutManager(linearLayoutManager);
 
 
-
-
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -92,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
         userRef.child(currentUserId).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -121,6 +127,101 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+
+        Query query = firestore.collection("Posts");
+
+        FirestoreRecyclerOptions<Posts> options = new FirestoreRecyclerOptions.Builder<Posts>()
+                .setQuery(query, Posts.class)
+                .build();
+        adapter = new FirestoreRecyclerAdapter<Posts, PostsViewHolder>(options) {
+            @Override
+            protected void onBindViewHolder(@NonNull PostsViewHolder viewHolder, int position, @NonNull Posts model) {
+                viewHolder.setFullName(model.getFullName());
+                viewHolder.setTime(model.getTime());
+                viewHolder.setDate(model.getDate());
+                viewHolder.setDescription(model.getDescription());
+                viewHolder.setPostImage(getApplicationContext(), model.getPostImage());
+
+            }
+            @NonNull
+            @Override
+            public PostsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View view = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.all_post_layout, parent, false);
+                return new PostsViewHolder(view);
+            }
+        };
+
+        postList.setAdapter(adapter);
+
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        adapter.startListening();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        adapter.stopListening();
+    }
+
+    public static class PostsViewHolder extends RecyclerView.ViewHolder
+    {
+        View mView;
+        private ImageView likeButton;
+        private TextView likeCount;
+
+        public PostsViewHolder(View itemView)
+        {
+            super(itemView);
+            mView = itemView;
+            likeButton = mView.findViewById(R.id.like_btn);
+            likeCount = mView.findViewById(R.id.like_text);
+        }
+
+        public void setLikeButtonState(boolean isLiked) {
+            if (isLiked) {
+                likeButton.setImageResource(R.drawable.baseline_favorite_24);
+            } else {
+                likeButton.setImageResource(R.drawable.baseline_favorite_border_24);
+            }
+        }
+
+        public void setLikes(int likes) {
+            likeCount.setText(String.valueOf(likes));
+        }
+
+        public void setFullName(String fullName)
+        {
+            TextView username = mView.findViewById(R.id.post_user_name);
+            username.setText(fullName);
+        }
+        public void setTime(String time)
+        {
+            TextView PostTime = mView.findViewById(R.id.post_time);
+            PostTime.setText("    " + time);
+        }
+
+        public void setDate(String date)
+        {
+            TextView PostDate = mView.findViewById(R.id.post_date);
+            PostDate.setText("    " + date);
+        }
+
+        public void setDescription(String description)
+        {
+            TextView PostDescription = mView.findViewById(R.id.post_description);
+            PostDescription.setText(description);
+        }
+
+        public void setPostImage(Context ctx1, String postImage)
+        {
+            ImageView PostImage = mView.findViewById(R.id.post_image);
+            Picasso.get().load(postImage).into(PostImage);
+        }
     }
 
     private void SendUserToPostActivity() {

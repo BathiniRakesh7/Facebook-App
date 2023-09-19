@@ -71,7 +71,7 @@ public class LoginAccount extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
                                     Toast.makeText(LoginAccount.this, "Logged in Successfully", Toast.LENGTH_SHORT).show();
-                                    startActivity(new Intent(getApplicationContext(),MainPage.class));
+                                    startActivity(new Intent(getApplicationContext(),MainActivity.class));
                                     Log.e(TAG, "Navigation to MainPage activity");
 
                                 } else {
