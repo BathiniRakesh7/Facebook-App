@@ -314,11 +314,17 @@ public class MainActivity extends AppCompatActivity {
         } else if (itemId == R.id.nav_messages) {
             Toast.makeText(this, "Messages", Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.nav_settings) {
-            Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+            sendUserToSettingsActivity();
+            Toast.makeText(this, "Account Settings", Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.nav_Logout) {
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(getApplicationContext(), LoginAccount.class));
             finish();
         }
+    }
+
+    private void sendUserToSettingsActivity() {
+        Intent settingActivity = new Intent(this, SettingsActivity.class);
+        startActivity(settingActivity);
     }
 }

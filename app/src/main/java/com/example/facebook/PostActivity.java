@@ -89,7 +89,7 @@ public class PostActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(PostActivity.this, "User is not authenticated.", Toast.LENGTH_SHORT).show();
                 }
-                ValidatePostInfo();
+                validatePostInfo();
             }
         });
 
@@ -120,7 +120,7 @@ public class PostActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            SendUserMainActivity();
+            sendUserMainActivity();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -156,7 +156,7 @@ public class PostActivity extends AppCompatActivity {
                                             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                                 @Override
                                                 public void onSuccess(DocumentReference documentReference) {
-                                                    SendUserMainActivity();
+                                                    sendUserMainActivity();
                                                     Toast.makeText(PostActivity.this, "New Post is updated successfully.", Toast.LENGTH_SHORT).show();
                                                     uploadProgressBar.dismiss();
                                                 }
@@ -197,7 +197,7 @@ public class PostActivity extends AppCompatActivity {
 
 
 
-    private void ValidatePostInfo()
+    private void validatePostInfo()
     {
         Description = postDescription.getText().toString();
 
@@ -259,7 +259,7 @@ public class PostActivity extends AppCompatActivity {
     }
 
 
-    private void SendUserMainActivity() {
+    private void sendUserMainActivity() {
         Intent mainIntent = new Intent(this,MainActivity.class);
         startActivity(mainIntent);
     }
