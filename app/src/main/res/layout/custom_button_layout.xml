@@ -1,0 +1,25 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <Button
+        android:id="@android:id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/blue"
+        android:minHeight="48dp"
+        android:text="Update"
+        android:textColor="@android:color/black" />
+
+    <Button
+        android:id="@android:id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/blue"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
+        android:text="Cancel"
+        android:textColor="@android:color/black" />
+</LinearLayout>

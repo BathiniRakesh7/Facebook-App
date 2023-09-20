@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:context=".ClickPostActivity">
+
+    <ImageView
+        android:id="@+id/click_post_image"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_margin="10dp"
+        android:padding="10dp"
+        app:srcCompat="@drawable/select_image" />
+
+    <TextView
+        android:id="@+id/click_post_description"
+        android:layout_width="391dp"
+        android:layout_height="36dp"
+        android:layout_below="@+id/click_post_image"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp"
+        android:text="Post description"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/click_edit_post_button"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_below="@+id/click_post_description"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="255dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp"
+        android:text="EDIT POST"
+        android:textStyle="bold"
+        android:textSize="17sp"
+        android:textColor="#212121" />
+
+    <Button
+        android:id="@+id/click_delete_post_button"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_below="@+id/click_edit_post_button"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp"
+        android:text="DELETE POST"
+        android:textStyle="bold"
+        android:textSize="17sp"
+        android:textColor="#212121" />
+
+</RelativeLayout>

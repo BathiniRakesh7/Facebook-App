@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 if (snapshot.exists()) {
                     if (snapshot.hasChild("FullName")) {
 
-                        String userName = snapshot.child("FullName").getValue().toString();
+                        String userName = snapshot.child("FullName").getValue(String.class);
                         userFullName.setText(userName);
                     } else {
                         Toast.makeText(MainActivity.this, "Profile name do not exists", Toast.LENGTH_SHORT).show();
@@ -142,6 +142,17 @@ public class MainActivity extends AppCompatActivity {
                 viewHolder.setDate(model.getDate());
                 viewHolder.setDescription(model.getDescription());
                 viewHolder.setPostImage(getApplicationContext(), model.getPostImage());
+                final String postId = getSnapshots().getSnapshot(position).getId();
+
+                viewHolder.mView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent clickPostIntent = new Intent(MainActivity.this,ClickPostActivity.class);
+                        clickPostIntent.putExtra("postId",postId);
+                        startActivity(clickPostIntent);
+
+                    }
+                });
 
             }
             @NonNull
@@ -168,11 +179,62 @@ public class MainActivity extends AppCompatActivity {
         adapter.stopListening();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        adapter.stopListening();
+        adapter = null;
+
+        // Re-create the adapter with new options.
+        Query query = firestore.collection("Posts");
+        FirestoreRecyclerOptions<Posts> options = new FirestoreRecyclerOptions.Builder<Posts>()
+                .setQuery(query, Posts.class)
+                .build();
+        adapter = new FirestoreRecyclerAdapter<Posts, PostsViewHolder>(options) {
+            @Override
+            protected void onBindViewHolder(@NonNull PostsViewHolder viewHolder, int position, @NonNull Posts model) {
+                viewHolder.setFullName(model.getFullName());
+                viewHolder.setTime(model.getTime());
+                viewHolder.setDate(model.getDate());
+                viewHolder.setDescription(model.getDescription());
+                viewHolder.setPostImage(getApplicationContext(), model.getPostImage());
+                 String postId = getSnapshots().getSnapshot(position).getId();
+
+                viewHolder.mView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent clickPostIntent = new Intent(MainActivity.this,ClickPostActivity.class);
+                        clickPostIntent.putExtra("postId",postId);
+                        startActivity(clickPostIntent);
+
+                    }
+                });
+
+            }
+            @NonNull
+            @Override
+            public PostsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View view = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.all_post_layout, parent, false);
+                return new PostsViewHolder(view);
+            }
+        };
+
+
+        postList.setAdapter(adapter);
+        adapter.startListening();
+    }
+
+
+
+
+
     public static class PostsViewHolder extends RecyclerView.ViewHolder
     {
         View mView;
-        private ImageView likeButton;
-        private TextView likeCount;
+        public ImageView likeButton;
+        public TextView likeCount;
 
         public PostsViewHolder(View itemView)
         {
