@@ -304,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
         int itemId = item.getItemId();
 
         if (itemId == R.id.nav_profile) {
+            sendUserToProfileActivity();
             Toast.makeText(this, "Profile", Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.nav_home) {
             Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
@@ -326,5 +327,9 @@ public class MainActivity extends AppCompatActivity {
     private void sendUserToSettingsActivity() {
         Intent settingActivity = new Intent(this, SettingsActivity.class);
         startActivity(settingActivity);
+    }
+    private void sendUserToProfileActivity() {
+        Intent profileActivity = new Intent(this, ProfileActivity.class);
+        startActivity(profileActivity);
     }
 }
