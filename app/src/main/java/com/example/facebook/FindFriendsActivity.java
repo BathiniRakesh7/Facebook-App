@@ -6,6 +6,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -75,6 +76,20 @@ public class FindFriendsActivity extends AppCompatActivity {
                     @Override
                     protected void onBindViewHolder(@NonNull FindFriendsViewHolder holder, int position, @NonNull FindFriends model) {
                         holder.setFullName(model.getFullName());
+
+                        holder.mView.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                int adapterPosition = holder.getAdapterPosition();
+                                if (adapterPosition != RecyclerView.NO_POSITION) {
+                                    String visitUserId = getSnapshots().getSnapshot(adapterPosition).getId();
+
+                                    Intent personProfileActivity = new Intent(FindFriendsActivity.this, PersonProfileActivity.class);
+                                    personProfileActivity.putExtra("visitUserid",visitUserId);
+                                    startActivity(personProfileActivity);
+                                }
+                            }
+                        });
                     }
 
                     @NonNull

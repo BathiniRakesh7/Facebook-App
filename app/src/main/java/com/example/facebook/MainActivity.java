@@ -292,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
                         if (likesData != null && likesData.containsKey(userId)) {
                             // User has already liked, update UI and Firestore
                             postLikesRef.update(userId, FieldValue.delete());
-                            int currentLikes = likesData.size() - 1;
+                            int currentLikes = likesData.size() - 1; // Subtract one for the user who unliked
                             likesCountTextView.setText(currentLikes + " Likes");
                         } else {
                             // User hasn't liked, update UI and Firestore
