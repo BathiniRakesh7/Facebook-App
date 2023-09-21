@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,6 +20,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -26,11 +30,17 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.squareup.picasso.Picasso;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private NavigationView navigationView;
@@ -144,12 +154,30 @@ public class MainActivity extends AppCompatActivity {
                 viewHolder.setPostImage(getApplicationContext(), model.getPostImage());
                 final String postId = getSnapshots().getSnapshot(position).getId();
 
+
                 viewHolder.mView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         Intent clickPostIntent = new Intent(MainActivity.this,ClickPostActivity.class);
                         clickPostIntent.putExtra("postId",postId);
                         startActivity(clickPostIntent);
+
+                    }
+                });
+                viewHolder.likeButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (viewHolder.likeButton.getTag() == null || viewHolder.likeButton.getTag().equals("unliked")) {
+                            viewHolder.likeButton.setImageResource(R.drawable.baseline_favorite_24);
+                            viewHolder.likeButton.setTag("liked");
+                            handleLikeClick(postId,currentUserId);
+
+                        } else {
+                            viewHolder.likeButton.setImageResource(R.drawable.baseline_favorite_border_24);
+                            viewHolder.likeButton.setTag("unliked");
+                            handleLikeClick(postId,currentUserId);
+
+                        }
 
                     }
                 });
@@ -200,6 +228,24 @@ public class MainActivity extends AppCompatActivity {
                 viewHolder.setDescription(model.getDescription());
                 viewHolder.setPostImage(getApplicationContext(), model.getPostImage());
                  String postId = getSnapshots().getSnapshot(position).getId();
+                viewHolder.likeButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        if (viewHolder.likeButton.getTag() == null || viewHolder.likeButton.getTag().equals("unliked")) {
+                            viewHolder.likeButton.setImageResource(R.drawable.baseline_favorite_24);
+                            viewHolder.likeButton.setTag("liked");
+                            handleLikeClick(postId,currentUserId);
+                        } else {
+                            viewHolder.likeButton.setImageResource(R.drawable.baseline_favorite_border_24);
+                            viewHolder.likeButton.setTag("unliked");
+                            handleLikeClick(postId,currentUserId);
+
+                        }
+                    }
+                });
+
+
 
                 viewHolder.mView.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -228,34 +274,63 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    public void handleLikeClick( String postId, String userId) {
+
+        DocumentReference postLikesRef = firestore.collection("Likes").document(postId);
+        final TextView likesCountTextView = findViewById(R.id.display_like_text);
+
+        postLikesRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                Log.d("LikeClick", "After Firestore query");
+
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        Map<String, Object> likesData = document.getData();
+
+                        if (likesData != null && likesData.containsKey(userId)) {
+                            // User has already liked, update UI and Firestore
+                            postLikesRef.update(userId, FieldValue.delete());
+                            int currentLikes = likesData.size() - 1;
+                            likesCountTextView.setText(currentLikes + " Likes");
+                        } else {
+                            // User hasn't liked, update UI and Firestore
+                            postLikesRef.update(userId, true);
+                            int currentLikes = likesData.size() + 1; // Add one for the user who liked
+                            likesCountTextView.setText(currentLikes + " Likes");
+                        }
+                    } else {
+                        Map<String, Object> initialLike = new HashMap<>();
+                        initialLike.put(userId, true);
+                        postLikesRef.set(initialLike);
+                        likesCountTextView.setText("1 Like");
+                    }
+                } else {
+                    // Handle error
+                    Log.e("LikeClick", "Firestore query failed: " + task.getException());
+                }
+            }
+        });
+    }
+
 
 
     public static class PostsViewHolder extends RecyclerView.ViewHolder
     {
         View mView;
         public ImageButton likeButton,commentButton;
-        public TextView likeCount;
+
 
         public PostsViewHolder(View itemView)
         {
             super(itemView);
             mView = itemView;
             likeButton = mView.findViewById(R.id.like_post_btn);
+            Log.d("LikeClick", "Like button initialized: " + (likeButton != null));
             commentButton = mView.findViewById(R.id.comment_post_btn);
-            likeCount = mView.findViewById(R.id.like_text);
         }
 
-        public void setLikeButtonState(boolean isLiked) {
-            if (isLiked) {
-                likeButton.setImageResource(R.drawable.baseline_favorite_24);
-            } else {
-                likeButton.setImageResource(R.drawable.baseline_favorite_border_24);
-            }
-        }
-
-        public void setLikes(int likes) {
-            likeCount.setText(String.valueOf(likes));
-        }
 
         public void setFullName(String fullName)
         {

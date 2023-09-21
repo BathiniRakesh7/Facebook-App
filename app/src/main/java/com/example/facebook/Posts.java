@@ -3,7 +3,6 @@ package com.example.facebook;
 public class Posts
 {
     public String uid, time, date, postImage, description, fullName;
-    private int likes; // Add this field to track the number of likes.
 
 
     public Posts()
@@ -18,7 +17,6 @@ public class Posts
         this.postImage = postImage;
         this.description = description;
         this.fullName = fullName;
-        this.likes = 0;
 
     }
 
@@ -71,12 +69,5 @@ public class Posts
         this.fullName = fullName;
     }
 
-    public int getLikes() {
-        return likes;
-    }
-
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
 }
 
