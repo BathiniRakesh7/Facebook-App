@@ -233,14 +233,15 @@ public class MainActivity extends AppCompatActivity {
     public static class PostsViewHolder extends RecyclerView.ViewHolder
     {
         View mView;
-        public ImageView likeButton;
+        public ImageButton likeButton,commentButton;
         public TextView likeCount;
 
         public PostsViewHolder(View itemView)
         {
             super(itemView);
             mView = itemView;
-            likeButton = mView.findViewById(R.id.like_btn);
+            likeButton = mView.findViewById(R.id.like_post_btn);
+            commentButton = mView.findViewById(R.id.comment_post_btn);
             likeCount = mView.findViewById(R.id.like_text);
         }
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    android:background="@color/mainBackground"
     android:layout_height="wrap_content">
     <LinearLayout
         android:layout_width="match_parent"
@@ -95,10 +96,12 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp">
 
-            <ImageView
-                android:id="@+id/like_btn"
+            <ImageButton
+                android:id="@+id/like_post_btn"
                 android:layout_width="35dp"
                 android:layout_height="match_parent"
                 android:layout_marginEnd="10dp"
@@ -107,51 +110,21 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:hint="Likes"
+                android:hint="0 Like"
                 android:layout_gravity="center"
-                android:textSize="20dp"
-                android:id="@+id/like_text"/>
-        </LinearLayout>
+                android:padding="15dp"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/black"
+                android:id="@+id/display_like_text"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="16dp">
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <EditText
-                    android:id="@+id/edit_text_comment"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:hint="Add a comment..."
-                    android:minHeight="48dp" />
-
-                <ImageView
-                    android:id="@+id/button_post_comment"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:src="@drawable/baseline_send_24" />
-            </RelativeLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/comment_item_layout"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/text_view_entered_comments"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="This is a comment" />
-
-            </LinearLayout>
+            <ImageButton
+                android:id="@+id/comment_post_btn"
+                android:layout_width="35dp"
+                android:layout_height="match_parent"
+android:layout_marginLeft="150dp"
+                android:baselineAlignBottom="false"
+                android:src="@drawable/baseline_mode_comment_24" />
         </LinearLayout>
 
 
