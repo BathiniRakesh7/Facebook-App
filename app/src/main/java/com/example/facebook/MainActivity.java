@@ -257,7 +257,8 @@ public class MainActivity extends AppCompatActivity {
     public static class PostsViewHolder extends RecyclerView.ViewHolder
     {
         View mView;
-        public ImageButton likeButton,commentButton;
+        public ImageButton likeButton;
+        public ImageView commentButton;
         public TextView displayLike;
 
 

@@ -9,6 +9,7 @@
         android:orientation="vertical"
         android:layout_marginBottom="4dp"
         android:layout_marginRight="10dp"
+        android:background="@drawable/post_border"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp">
         <LinearLayout
@@ -118,13 +119,13 @@
                 android:textColor="@android:color/black"
                 android:id="@+id/display_like_text"/>
 
-            <ImageButton
+            <ImageView
                 android:id="@+id/comment_post_btn"
                 android:layout_width="35dp"
                 android:layout_height="match_parent"
 android:layout_marginLeft="150dp"
                 android:baselineAlignBottom="false"
-                android:src="@drawable/baseline_mode_comment_24" />
+                android:src="@drawable/comment_icon" />
         </LinearLayout>
 
 
