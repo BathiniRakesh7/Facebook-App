@@ -159,7 +159,7 @@ public class CommentsActivity extends AppCompatActivity {
 
         String commentText = commentInputText.getText().toString();
         if(TextUtils.isEmpty(commentText)){
-            Toast.makeText(this, "please enter text", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "please enter comment", Toast.LENGTH_SHORT).show();
         }
         else {
             Calendar calFordDate = Calendar.getInstance();

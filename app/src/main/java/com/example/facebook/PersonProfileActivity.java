@@ -26,8 +26,12 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.WriteBatch;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -37,21 +41,25 @@ public class PersonProfileActivity extends AppCompatActivity {
     private CircleImageView personProfileImage;
     private Button sendFriendRequestBtn, declineFriendRequestBtn;
 
-    private CollectionReference usersRef;
+    private CollectionReference usersCollection,friendsCollection;
 
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
+
+    private DocumentReference senderRequestRef,receiverRequestRef;
 
 
-    private String senderUserid, receiverUserid, CURRENT_STATE;
+    private String senderUserid, receiverUserid, CURRENT_STATE,saveCurrentDateTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
         senderUserid = mAuth.getCurrentUser().getUid();
         receiverUserid = getIntent().getExtras().get("visitUserid").toString();
-        usersRef = FirebaseFirestore.getInstance().collection("Users");
+        usersCollection = FirebaseFirestore.getInstance().collection("Users");
 
         setContentView(R.layout.activity_person_profile);
         personProfileName = findViewById(R.id.person_profile_full_name);
@@ -64,7 +72,7 @@ public class PersonProfileActivity extends AppCompatActivity {
         declineFriendRequestBtn = findViewById(R.id.decline_friend_request);
 
 
-        usersRef.document(receiverUserid).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        usersCollection.document(receiverUserid).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
 
@@ -100,6 +108,9 @@ public class PersonProfileActivity extends AppCompatActivity {
                     if (CURRENT_STATE.equals("not_friends")) {
                         sendRequestToPerson();
                     }
+                    if(CURRENT_STATE.equals("request_sent")){
+                        cancelFriendRequest();
+                    }
                 }
             });
 
@@ -111,9 +122,31 @@ public class PersonProfileActivity extends AppCompatActivity {
         }
     }
 
+
+    private void cancelFriendRequest() {
+        senderRequestRef = db.collection("Friend Requests")
+                .document(senderUserid)
+                .collection("sentRequests")
+                .document(receiverUserid);
+
+        senderRequestRef.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    CURRENT_STATE = "not_friends";
+                    sendFriendRequestBtn.setText("Send Friend Request");
+                    declineFriendRequestBtn.setVisibility(View.INVISIBLE);
+                    declineFriendRequestBtn.setEnabled(false);
+                } else {
+                    Toast.makeText(PersonProfileActivity.this, "Request not Cancelled", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+
     private void maintenanceOfButtons() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        DocumentReference senderRequestRef = db.collection("Friend Requests")
+         senderRequestRef = db.collection("Friend Requests")
                 .document(senderUserid)
                 .collection("sentRequests")
                 .document(receiverUserid);
@@ -140,9 +173,9 @@ public class PersonProfileActivity extends AppCompatActivity {
 
     private void sendRequestToPerson() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        DocumentReference senderRequestRef = db.collection("Friend Requests")
+        senderRequestRef = db.collection("Friend Requests")
                 .document(senderUserid).collection("sentRequests").document(receiverUserid);
-        DocumentReference receiverRequestRef = db.collection("Friend Requests")
+        receiverRequestRef = db.collection("Friend Requests")
                 .document(receiverUserid).collection("receivedRequests").document(senderUserid);
         senderRequestRef
                 .set(new HashMap<String, Object>() {{
@@ -152,7 +185,6 @@ public class PersonProfileActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            // Set the request_type field for the receiver
                             receiverRequestRef
                                     .set(new HashMap<String, Object>() {{
                                         put("request_type", "received");
