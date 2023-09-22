@@ -139,6 +139,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+
+
         Query query = firestore.collection("Posts");
 
         FirestoreRecyclerOptions<Posts> options = new FirestoreRecyclerOptions.Builder<Posts>()
@@ -165,6 +172,15 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
+
+                viewHolder.commentButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent commentsActivity = new Intent(MainActivity.this, CommentsActivity.class);
+                        commentsActivity.putExtra("postId",postId);
+                        startActivity(commentsActivity);
+                    }
+                });
                 viewHolder.likeButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -184,81 +200,13 @@ public class MainActivity extends AppCompatActivity {
         };
 
         postList.setAdapter(adapter);
-
-    }
-    @Override
-    protected void onStart() {
-        super.onStart();
         adapter.startListening();
     }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        adapter.stopListening();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        adapter.stopListening();
-        adapter = null;
-
-        // Re-create the adapter with new options.
-        Query query = firestore.collection("Posts");
-        FirestoreRecyclerOptions<Posts> options = new FirestoreRecyclerOptions.Builder<Posts>()
-                .setQuery(query, Posts.class)
-                .build();
-        adapter = new FirestoreRecyclerAdapter<Posts, PostsViewHolder>(options) {
-            @Override
-            protected void onBindViewHolder(@NonNull PostsViewHolder viewHolder, int position, @NonNull Posts model) {
-                viewHolder.setFullName(model.getFullName());
-                viewHolder.setTime(model.getTime());
-                viewHolder.setDate(model.getDate());
-                viewHolder.setDescription(model.getDescription());
-                viewHolder.setPostImage(getApplicationContext(), model.getPostImage());
-                 String postId = getSnapshots().getSnapshot(position).getId();
-                loadPreviousLikes(postId, currentUserId, viewHolder);
-
-                viewHolder.likeButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        handleLikeClick(postId, currentUserId, viewHolder);
-                    }
-                });
-
-                viewHolder.mView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Intent clickPostIntent = new Intent(MainActivity.this,ClickPostActivity.class);
-                        clickPostIntent.putExtra("postId",postId);
-                        startActivity(clickPostIntent);
-
-                    }
-                });
-
-            }
-            @NonNull
-            @Override
-            public PostsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                View view = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.all_post_layout, parent, false);
-                return new PostsViewHolder(view);
-            }
-        };
-
-
-        postList.setAdapter(adapter);
-        adapter.startListening();
-    }
-
 
     public static class PostsViewHolder extends RecyclerView.ViewHolder
     {
         View mView;
-        public ImageButton likeButton;
-        public ImageView commentButton;
+        public ImageButton likeButton,commentButton;
         public TextView displayLike;
 
 

@@ -119,13 +119,13 @@
                 android:textColor="@android:color/black"
                 android:id="@+id/display_like_text"/>
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/comment_post_btn"
-                android:layout_width="35dp"
+                android:layout_width="48dp"
                 android:layout_height="match_parent"
-android:layout_marginLeft="150dp"
+                android:layout_marginLeft="150dp"
                 android:baselineAlignBottom="false"
-                android:src="@drawable/comment_icon" />
+                android:src="@drawable/comment" />
         </LinearLayout>
 
 
