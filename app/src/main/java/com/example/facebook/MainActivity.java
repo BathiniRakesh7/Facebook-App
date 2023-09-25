@@ -345,6 +345,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (itemId == R.id.nav_home) {
             Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.nav_friends) {
+            sendUserToFriendsActivity();
             Toast.makeText(this, "Friend List", Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.nav_find_friends) {
             sendUserToFindFriendsActivity();
@@ -364,6 +365,10 @@ public class MainActivity extends AppCompatActivity {
     private void sendUserToSettingsActivity() {
         Intent settingActivity = new Intent(this, SettingsActivity.class);
         startActivity(settingActivity);
+    }
+    private void sendUserToFriendsActivity() {
+        Intent friendsActivity = new Intent(this, FriendsActivity.class);
+        startActivity(friendsActivity);
     }
     private void sendUserToProfileActivity() {
         Intent profileActivity = new Intent(this, ProfileActivity.class);
