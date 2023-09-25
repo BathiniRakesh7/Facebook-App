@@ -15,23 +15,19 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.WriteBatch;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+
 import java.util.HashMap;
-import java.util.Map;
+
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -41,15 +37,15 @@ public class PersonProfileActivity extends AppCompatActivity {
     private CircleImageView personProfileImage;
     private Button sendFriendRequestBtn, declineFriendRequestBtn;
 
-    private CollectionReference usersCollection,friendsCollection;
+    private CollectionReference usersCollection, friendsCollection,friendRef;
 
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
-    private DocumentReference senderRequestRef,receiverRequestRef;
+    private DocumentReference senderRequestRef, receiverRequestRef;
 
 
-    private String senderUserid, receiverUserid, CURRENT_STATE,saveCurrentDateTime;
+    private String senderUserid, receiverUserid, CURRENT_STATE, saveCurrentDateTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +56,7 @@ public class PersonProfileActivity extends AppCompatActivity {
         senderUserid = mAuth.getCurrentUser().getUid();
         receiverUserid = getIntent().getExtras().get("visitUserid").toString();
         usersCollection = FirebaseFirestore.getInstance().collection("Users");
+        friendRef = db.collection("Friends");
 
         setContentView(R.layout.activity_person_profile);
         personProfileName = findViewById(R.id.person_profile_full_name);
@@ -108,8 +105,14 @@ public class PersonProfileActivity extends AppCompatActivity {
                     if (CURRENT_STATE.equals("not_friends")) {
                         sendRequestToPerson();
                     }
-                    if(CURRENT_STATE.equals("request_sent")){
+                    if (CURRENT_STATE.equals("request_sent")) {
                         cancelFriendRequest();
+                    }
+                    if (CURRENT_STATE.equals("received")) {
+                        acceptFriendRequest();
+                    }
+                    if (CURRENT_STATE.equals("friends")) {
+                        unFriendThePerson();
                     }
                 }
             });
@@ -122,23 +125,124 @@ public class PersonProfileActivity extends AppCompatActivity {
         }
     }
 
+    private void unFriendThePerson() {
+        DocumentReference senderRef = db.collection("Friends")
+                .document(senderUserid).collection("acceptRequests")
+                .document(receiverUserid);
+
+
+        senderRef.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    DocumentReference receiverRef = db.collection("Friends")
+                            .document(receiverUserid).collection("acceptRequests")
+                            .document(senderUserid);
+                    receiverRef.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                CURRENT_STATE = "not_friends";
+                                sendFriendRequestBtn.setText("Send Friend Request");
+                                declineFriendRequestBtn.setVisibility(View.INVISIBLE);
+                                declineFriendRequestBtn.setEnabled(false);
+                            } else {
+                                Toast.makeText(PersonProfileActivity.this, "Request not Cancelled", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void acceptFriendRequest() {
+        Calendar calFordDate = Calendar.getInstance();
+        SimpleDateFormat currentDate = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+        saveCurrentDateTime = currentDate.format(calFordDate.getTime());
+        friendRef
+                .document(senderUserid)
+                .collection("acceptRequests")
+                .document(receiverUserid)
+                .set(new HashMap<String, Object>() {{
+                    put("dateTime", saveCurrentDateTime);
+                }})
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            friendRef
+                                    .document(receiverUserid)
+                                    .collection("acceptRequests")
+                                    .document(senderUserid)
+                                    .set(new HashMap<String, Object>() {{
+                                        put("dateTime", saveCurrentDateTime);
+                                    }})
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()) {
+                                                senderRequestRef = db.collection("Friend Requests")
+                                                        .document(senderUserid).collection("requests")
+                                                        .document(receiverUserid);
+
+                                                senderRequestRef.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                    @Override
+                                                    public void onComplete(@NonNull Task<Void> task) {
+                                                        if (task.isSuccessful()) {
+                                                            receiverRequestRef = db.collection("Friend Requests")
+                                                                    .document(receiverUserid).collection("requests")
+                                                                    .document(senderUserid);
+                                                            receiverRequestRef.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                                @Override
+                                                                public void onComplete(@NonNull Task<Void> task) {
+                                                                    if (task.isSuccessful()) {
+                                                                        CURRENT_STATE = "friends";
+                                                                        sendFriendRequestBtn.setText("Unfriend this Person");
+                                                                        declineFriendRequestBtn.setVisibility(View.INVISIBLE);
+                                                                        declineFriendRequestBtn.setEnabled(false);
+                                                                    } else {
+                                                                        Toast.makeText(PersonProfileActivity.this, "Request not Cancelled", Toast.LENGTH_SHORT).show();
+                                                                    }
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                });
+    }
+
 
     private void cancelFriendRequest() {
         senderRequestRef = db.collection("Friend Requests")
-                .document(senderUserid)
-                .collection("sentRequests")
+                .document(senderUserid).collection("requests")
                 .document(receiverUserid);
 
         senderRequestRef.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
-                    CURRENT_STATE = "not_friends";
-                    sendFriendRequestBtn.setText("Send Friend Request");
-                    declineFriendRequestBtn.setVisibility(View.INVISIBLE);
-                    declineFriendRequestBtn.setEnabled(false);
-                } else {
-                    Toast.makeText(PersonProfileActivity.this, "Request not Cancelled", Toast.LENGTH_SHORT).show();
+                    receiverRequestRef = db.collection("Friend Requests")
+                            .document(receiverUserid).collection("requests")
+                            .document(senderUserid);
+                    receiverRequestRef.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                CURRENT_STATE = "not_friends";
+                                sendFriendRequestBtn.setText("Send Friend Request");
+                                declineFriendRequestBtn.setVisibility(View.INVISIBLE);
+                                declineFriendRequestBtn.setEnabled(false);
+                            } else {
+                                Toast.makeText(PersonProfileActivity.this, "Request not Cancelled", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
                 }
             }
         });
@@ -146,9 +250,8 @@ public class PersonProfileActivity extends AppCompatActivity {
 
 
     private void maintenanceOfButtons() {
-         senderRequestRef = db.collection("Friend Requests")
-                .document(senderUserid)
-                .collection("sentRequests")
+        senderRequestRef = db.collection("Friend Requests")
+                .document(senderUserid).collection("requests")
                 .document(receiverUserid);
         senderRequestRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
@@ -160,24 +263,66 @@ public class PersonProfileActivity extends AppCompatActivity {
                         sendFriendRequestBtn.setText("Cancel Friend Request");
                         declineFriendRequestBtn.setVisibility(View.INVISIBLE);
                         declineFriendRequestBtn.setEnabled(false);
+                    } else {
+                        receiverRequestRef = db.collection("Friend Requests")
+                                .document(receiverUserid).collection("requests")
+                                .document(senderUserid);
+
+                        senderRequestRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                            @Override
+                            public void onEvent(@Nullable DocumentSnapshot snapshot, @Nullable FirebaseFirestoreException error) {
+                                if (snapshot != null && snapshot.exists()) {
+                                    String request_type = snapshot.getString("request_type");
+                                    if ("received".equals(request_type)) {
+                                        CURRENT_STATE = "received";
+                                        sendFriendRequestBtn.setText("Accept Friend Request");
+                                        declineFriendRequestBtn.setVisibility(View.VISIBLE);
+                                        declineFriendRequestBtn.setEnabled(true);
+                                        declineFriendRequestBtn.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View view) {
+                                                cancelFriendRequest();
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        CURRENT_STATE = "not_friends";
+                                        sendFriendRequestBtn.setText("Send Friend Request");
+                                        declineFriendRequestBtn.setVisibility(View.INVISIBLE);
+                                        declineFriendRequestBtn.setEnabled(false);
+                                    }
+                                }
+                            }
+                        });
+
+
                     }
-                } else {
-                    CURRENT_STATE = "not_friends";
-                    sendFriendRequestBtn.setText("Send Friend Request");
-                    declineFriendRequestBtn.setVisibility(View.INVISIBLE);
-                    declineFriendRequestBtn.setEnabled(false);
+                }
+                else {
+                    DocumentReference senderRef = friendRef.document(senderUserid).collection("acceptRequests").document(receiverUserid);
+                    senderRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                        @Override
+                        public void onEvent(@Nullable DocumentSnapshot snapshot, @Nullable FirebaseFirestoreException error) {
+                            if (snapshot != null && snapshot.exists()) {
+                                CURRENT_STATE = "friends";
+                                sendFriendRequestBtn.setText("Unfriend this Person");
+                                declineFriendRequestBtn.setVisibility(View.INVISIBLE);
+                                declineFriendRequestBtn.setEnabled(false);
+                            }
+
+                        }
+                    });
                 }
             }
         });
     }
 
     private void sendRequestToPerson() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        senderRequestRef = db.collection("Friend Requests")
-                .document(senderUserid).collection("sentRequests").document(receiverUserid);
-        receiverRequestRef = db.collection("Friend Requests")
-                .document(receiverUserid).collection("receivedRequests").document(senderUserid);
-        senderRequestRef
+        CollectionReference friendRequestsRef = db.collection("Friend Requests");
+        friendRequestsRef
+                .document(senderUserid)
+                .collection("requests")
+                .document(receiverUserid)
                 .set(new HashMap<String, Object>() {{
                     put("request_type", "sent");
                 }})
@@ -185,7 +330,10 @@ public class PersonProfileActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            receiverRequestRef
+                            friendRequestsRef
+                                    .document(receiverUserid)
+                                    .collection("requests")
+                                    .document(senderUserid)
                                     .set(new HashMap<String, Object>() {{
                                         put("request_type", "received");
                                     }})
@@ -205,4 +353,5 @@ public class PersonProfileActivity extends AppCompatActivity {
                     }
                 });
     }
+
 }
