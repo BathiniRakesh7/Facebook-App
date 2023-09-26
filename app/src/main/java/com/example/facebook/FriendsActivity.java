@@ -1,10 +1,13 @@
 package com.example.facebook;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -69,6 +72,38 @@ public class FriendsActivity extends AppCompatActivity {
                                     String userName = documentSnapshot.getString("FullName");
                                     holder.setFullName(userName);
                                     holder.setDateTime(model.getDateTime());
+                                    holder.mView.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            CharSequence options[] = new CharSequence[]{
+                                                    userName + "'s Profile",
+                                                    "Send Message"
+                                            };
+                                            AlertDialog.Builder builder = new AlertDialog.Builder(FriendsActivity.this);
+                                            builder.setTitle("Select an Option");
+
+                                            builder.setItems(options, new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    if (i == 0){
+                                                        Intent personProfileActivity = new Intent(FriendsActivity.this,PersonProfileActivity.class);
+                                                        personProfileActivity.putExtra("visitUserid",usersId);
+                                                        startActivity(personProfileActivity);
+
+                                                    }
+                                                    if (i == 1){
+                                                        Intent chartActivity = new Intent(FriendsActivity.this,ChartActivity.class);
+                                                        chartActivity.putExtra("visitUserid",usersId);
+                                                        chartActivity.putExtra("userName",userName);
+                                                        startActivity(chartActivity);
+
+                                                    }
+
+                                                }
+                                            });
+                                            builder.show();
+                                        }
+                                    });
                                 }
                             }
                         });

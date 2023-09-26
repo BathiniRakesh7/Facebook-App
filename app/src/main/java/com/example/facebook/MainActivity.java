@@ -55,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference userRef;
 
     String currentUserId;
-    private int currentLikes = 0;
 
 
 
