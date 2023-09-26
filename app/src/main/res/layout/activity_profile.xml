@@ -68,6 +68,36 @@
                 android:textSize="18sp"
                 android:textStyle="bold"/>
 
+            <Button
+                android:id="@+id/my_post_button"
+                android:layout_width="170dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/my_profile_mobile"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="50dp"
+                android:background="@android:color/background_light"
+                android:minHeight="48dp"
+                android:text="Uploaded Posts"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+            <Button
+                android:id="@+id/my_friends_button"
+                android:layout_width="170dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/my_profile_mobile"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="50dp"
+                android:background="@android:color/background_light"
+                android:minHeight="48dp"
+                android:text="Friends"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
         </RelativeLayout>
 
     </ScrollView>
