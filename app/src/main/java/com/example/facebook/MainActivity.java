@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,6 +31,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
@@ -52,10 +54,9 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar mToolbar;
     private FirebaseAuth mAuth;
 
-    private DatabaseReference userRef;
+    private CollectionReference userRef;
 
     String currentUserId;
-
 
 
     private FirebaseFirestore firestore;
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         firestore = FirebaseFirestore.getInstance();
 
         currentUserId = mAuth.getCurrentUser().getUid();
-        userRef = FirebaseDatabase.getInstance().getReference().child("Users");
+        userRef = firestore.collection("Users");
         mToolbar = findViewById(R.id.main_page_tool_bar);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setTitle("Home");
@@ -86,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         navigationView = findViewById(R.id.navigation_view);
-        userFullName = findViewById(R.id.nav_user_full_name);
 
         View navigationHeaderView = navigationView.inflateHeaderView(R.layout.navigation_header);
 
@@ -106,27 +106,25 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
-
-        userRef.child(currentUserId).addValueEventListener(new ValueEventListener() {
+        userRef.document(currentUserId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+            public void onSuccess(DocumentSnapshot snapshot) {
                 if (snapshot.exists()) {
-                    if (snapshot.hasChild("FullName")) {
+                    String userName = snapshot.getString("FullName");
+                    TextView userFullName = findViewById(R.id.nav_user_full_name);
 
-                        String userName = snapshot.child("FullName").getValue(String.class);
+                    if (userFullName != null) {
                         userFullName.setText(userName);
+                        Log.d("username", userName);
                     } else {
-                        Toast.makeText(MainActivity.this, "Profile name do not exists", Toast.LENGTH_SHORT).show();
+                        Log.e("Error", "userFullName TextView is null");
                     }
+                } else {
+                    Toast.makeText(MainActivity.this, "Profile name does not exist", Toast.LENGTH_SHORT).show();
                 }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
             }
         });
+
 
         addNewPostButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -139,10 +137,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
     @Override
     protected void onStart() {
         super.onStart();
-
 
 
         Query query = firestore.collection("Posts");
@@ -165,8 +163,8 @@ public class MainActivity extends AppCompatActivity {
                 viewHolder.mView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Intent clickPostIntent = new Intent(MainActivity.this,ClickPostActivity.class);
-                        clickPostIntent.putExtra("postId",postId);
+                        Intent clickPostIntent = new Intent(MainActivity.this, ClickPostActivity.class);
+                        clickPostIntent.putExtra("postId", postId);
                         startActivity(clickPostIntent);
 
                     }
@@ -176,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         Intent commentsActivity = new Intent(MainActivity.this, CommentsActivity.class);
-                        commentsActivity.putExtra("postId",postId);
+                        commentsActivity.putExtra("postId", postId);
                         startActivity(commentsActivity);
                     }
                 });
@@ -189,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
                 });
 
             }
+
             @NonNull
             @Override
             public PostsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -202,15 +201,13 @@ public class MainActivity extends AppCompatActivity {
         adapter.startListening();
     }
 
-    public static class PostsViewHolder extends RecyclerView.ViewHolder
-    {
+    public static class PostsViewHolder extends RecyclerView.ViewHolder {
         View mView;
-        public ImageButton likeButton,commentButton;
+        public ImageButton likeButton, commentButton;
         public TextView displayLike;
 
 
-        public PostsViewHolder(View itemView)
-        {
+        public PostsViewHolder(View itemView) {
             super(itemView);
             mView = itemView;
             likeButton = mView.findViewById(R.id.like_post_btn);
@@ -219,31 +216,27 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        public void setFullName(String fullName)
-        {
+        public void setFullName(String fullName) {
             TextView username = mView.findViewById(R.id.post_user_name);
             username.setText(fullName);
         }
-        public void setTime(String time)
-        {
+
+        public void setTime(String time) {
             TextView PostTime = mView.findViewById(R.id.post_time);
             PostTime.setText("    " + time);
         }
 
-        public void setDate(String date)
-        {
+        public void setDate(String date) {
             TextView PostDate = mView.findViewById(R.id.post_date);
             PostDate.setText("    " + date);
         }
 
-        public void setDescription(String description)
-        {
+        public void setDescription(String description) {
             TextView PostDescription = mView.findViewById(R.id.post_description);
             PostDescription.setText(description);
         }
 
-        public void setPostImage(Context ctx1, String postImage)
-        {
+        public void setPostImage(Context ctx1, String postImage) {
             ImageView PostImage = mView.findViewById(R.id.post_image);
             Picasso.get().load(postImage).into(PostImage);
         }
@@ -272,8 +265,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
     private boolean isCurrentUserLiked(Map<String, Object> likesData, String userId) {
-        return likesData.containsKey(userId);}
+        return likesData.containsKey(userId);
+    }
 
     public void handleLikeClick(final String postId, final String userId, final PostsViewHolder viewHolder) {
         final DocumentReference postLikesRef = firestore.collection("Likes").document(postId);
@@ -365,14 +360,17 @@ public class MainActivity extends AppCompatActivity {
         Intent settingActivity = new Intent(this, SettingsActivity.class);
         startActivity(settingActivity);
     }
+
     private void sendUserToFriendsActivity() {
         Intent friendsActivity = new Intent(this, FriendsActivity.class);
         startActivity(friendsActivity);
     }
+
     private void sendUserToProfileActivity() {
         Intent profileActivity = new Intent(this, ProfileActivity.class);
         startActivity(profileActivity);
     }
+
     private void sendUserToFindFriendsActivity() {
         Intent findFriendsActivity = new Intent(this, FindFriendsActivity.class);
         startActivity(findFriendsActivity);
