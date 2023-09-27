@@ -22,6 +22,11 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+
 public class FriendsActivity extends AppCompatActivity {
     private RecyclerView myFriendList;
     private CollectionReference allFriendsRef,usersRef;
@@ -119,6 +124,43 @@ public class FriendsActivity extends AppCompatActivity {
                 };
         myFriendList.setAdapter(adapter);
         adapter.startListening();
+    }
+
+    public void updateUserStatus(String state){
+        String saveCurrentDate ,saveCurrentTime;
+        Calendar calFordDate = Calendar.getInstance();
+        SimpleDateFormat currentDate = new SimpleDateFormat("MMM dd,yyyy");
+        saveCurrentDate = currentDate.format(calFordDate.getTime());
+
+        SimpleDateFormat currentTime = new SimpleDateFormat("hh:mm a");
+        saveCurrentTime = currentTime.format(calFordDate.getTime());
+
+        Map<String,Object> currentStateMap = new HashMap<>();
+        currentStateMap.put("date",saveCurrentDate);
+        currentStateMap.put("time",saveCurrentTime);
+        currentStateMap.put("type",state);
+
+        usersRef.document(onlineUserId).update("userState",currentStateMap);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        updateUserStatus("online");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        updateUserStatus("offline");
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        updateUserStatus("offline");
+
     }
 
     public static class FriendsViewHolder extends RecyclerView.ViewHolder{

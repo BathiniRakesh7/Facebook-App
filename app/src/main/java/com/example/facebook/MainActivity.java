@@ -41,6 +41,8 @@ import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -93,7 +95,6 @@ public class MainActivity extends AppCompatActivity {
         postList = findViewById(R.id.all_user_post_list);
         postList.setHasFixedSize(true);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-
         linearLayoutManager.setReverseLayout(true);
         linearLayoutManager.setStackFromEnd(true);
         postList.setLayoutManager(linearLayoutManager);
@@ -135,7 +136,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        updateUserStatus("online");
+    }
+    public void updateUserStatus(String state){
+        String saveCurrentDate ,saveCurrentTime;
+        Calendar calFordDate = Calendar.getInstance();
+        SimpleDateFormat currentDate = new SimpleDateFormat("MMM dd,yyyy");
+        saveCurrentDate = currentDate.format(calFordDate.getTime());
 
+        SimpleDateFormat currentTime = new SimpleDateFormat("hh:mm a");
+        saveCurrentTime = currentTime.format(calFordDate.getTime());
+
+        Map<String,Object> currentStateMap = new HashMap<>();
+        currentStateMap.put("date",saveCurrentDate);
+        currentStateMap.put("time",saveCurrentTime);
+        currentStateMap.put("type",state);
+
+        userRef.document(currentUserId).update("userState",currentStateMap);
     }
 
     @Override
@@ -350,6 +367,7 @@ public class MainActivity extends AppCompatActivity {
             sendUserToSettingsActivity();
             Toast.makeText(this, "Account Settings", Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.nav_Logout) {
+            updateUserStatus("offline");
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(getApplicationContext(), LoginAccount.class));
             finish();

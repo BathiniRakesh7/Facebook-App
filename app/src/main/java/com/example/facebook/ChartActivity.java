@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
@@ -28,6 +29,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -52,7 +54,7 @@ public class ChartActivity extends AppCompatActivity {
     private MessagesAdapter messagesAdapter ;
     private String messageReceiverId, messageReceiverName,messageSenderId,saveCurrentDate,saveCurrentTime;
 
-    private TextView receiverName;
+    private TextView receiverName,userLastSeen;
     private CircleImageView receiverProfileImage;
     private FirebaseFirestore rootRef;
     private FirebaseAuth mAuth;
@@ -83,6 +85,7 @@ public class ChartActivity extends AppCompatActivity {
 
 
         receiverName = findViewById(R.id.custom_profile_name);
+        userLastSeen = findViewById(R.id.custom_user_last_seen);
         receiverProfileImage = findViewById(R.id.custom_profile_image);
         sendMessageBtn = findViewById(R.id.send_message_button);
         sendImageBtn = findViewById(R.id.send_image_button);
@@ -136,6 +139,7 @@ public class ChartActivity extends AppCompatActivity {
 
 
     private void sendMessage() {
+        updateUserStatus("online");
         String messageText = userMessageInput.getText().toString();
         if (TextUtils.isEmpty(messageText)){
             Toast.makeText(this, "Please type a Message", Toast.LENGTH_SHORT).show();
@@ -183,19 +187,47 @@ public class ChartActivity extends AppCompatActivity {
 
                 }
             });
-        }    }
+        }
+    }
+    public void updateUserStatus(String state){
+        String saveCurrentDate ,saveCurrentTime;
+        Calendar calFordDate = Calendar.getInstance();
+        SimpleDateFormat currentDate = new SimpleDateFormat("MMM dd,yyyy");
+        saveCurrentDate = currentDate.format(calFordDate.getTime());
+
+        SimpleDateFormat currentTime = new SimpleDateFormat("hh:mm a");
+        saveCurrentTime = currentTime.format(calFordDate.getTime());
+
+        Map<String,Object> currentStateMap = new HashMap<>();
+        currentStateMap.put("date",saveCurrentDate);
+        currentStateMap.put("time",saveCurrentTime);
+        currentStateMap.put("type",state);
+
+        rootRef.collection("Users").document(messageSenderId).update("userState",currentStateMap);
+    }
 
     private void displayReceiverInfo() {
         receiverName.setText(messageReceiverName);
-//        rootRef.collection("Users").document(messageReceiverId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-//            @Override
-//            public void onSuccess(DocumentSnapshot snapshot) {
-//                if(snapshot.exists()){
-////                    final String  profileImage = snapshot.getString("profileImage");
-////                    Picasso.with(ChartActivity.this).load(profileImage).placeholder(R.drawable.profile).into(receiverProfileImage);
-//                }
-//
-//            }
-//        });
+        rootRef.collection("Users").document(messageReceiverId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot snapshot) {
+                if(snapshot.exists()){
+                    final String type = snapshot.getString("userState.type");
+                    final String lastDate = snapshot.getString("userState.date");
+                    final String lastTime = snapshot.getString("userState.time");
+//                    final String  profileImage = snapshot.getString("profileImage");
+//                    Picasso.with(ChartActivity.this).load(profileImage).placeholder(R.drawable.profile).into(receiverProfileImage);
+
+                    assert type != null;
+                    if(type.equals("online")){
+                        userLastSeen.setText("online");
+                    }
+                    else {
+                        userLastSeen.setText("Last seen: " + lastTime+" " + lastDate);
+                    }
+                }
+
+            }
+        });
     }
 }
