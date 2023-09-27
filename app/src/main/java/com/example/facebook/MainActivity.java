@@ -362,6 +362,7 @@ public class MainActivity extends AppCompatActivity {
             sendUserToFindFriendsActivity();
             Toast.makeText(this, "Find Friends", Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.nav_messages) {
+            sendUserToFriendsActivity();
             Toast.makeText(this, "Messages", Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.nav_settings) {
             sendUserToSettingsActivity();

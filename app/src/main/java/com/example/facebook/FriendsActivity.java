@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
@@ -75,12 +76,24 @@ public class FriendsActivity extends AppCompatActivity {
                             public void onSuccess(DocumentSnapshot documentSnapshot) {
                                 if (documentSnapshot.exists()){
                                     String userName = documentSnapshot.getString("FullName");
+                                    final String type;
+                                    if(documentSnapshot.contains("userState")){
+                                        type = documentSnapshot.getString("userState.type");
+
+                                        if(type.equals("online")){
+                                            holder.onlineStatus.setVisibility(View.VISIBLE);
+                                        }
+                                        else{
+                                            holder.onlineStatus.setVisibility(View.INVISIBLE);
+
+                                        }
+                                    }
                                     holder.setFullName(userName);
                                     holder.setDateTime(model.getDateTime());
                                     holder.mView.setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View view) {
-                                            CharSequence options[] = new CharSequence[]{
+                                            CharSequence[] options = new CharSequence[]{
                                                     userName + "'s Profile",
                                                     "Send Message"
                                             };
@@ -165,9 +178,11 @@ public class FriendsActivity extends AppCompatActivity {
 
     public static class FriendsViewHolder extends RecyclerView.ViewHolder{
         View mView;
+        ImageView onlineStatus;
         public FriendsViewHolder( View itemView) {
             super(itemView);
             mView = itemView;
+            onlineStatus = itemView.findViewById(R.id.all_users_online_icon);
         }
         public void setFullName(String FullName){
             TextView userName = mView.findViewById(R.id.all_users_profile_name);
