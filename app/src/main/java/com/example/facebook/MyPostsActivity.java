@@ -16,10 +16,12 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
@@ -33,11 +35,15 @@ import com.squareup.picasso.Picasso;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class MyPostsActivity extends AppCompatActivity {
     private Toolbar mToolBar;
     private RecyclerView myPostsList;
     private FirebaseAuth mAuth;
     private CollectionReference postsRef;
+    private CollectionReference userRef;
+
     private FirebaseFirestore firestore;
     private String currentUserId;
 
@@ -51,6 +57,7 @@ public class MyPostsActivity extends AppCompatActivity {
         firestore = FirebaseFirestore.getInstance();
 
         postsRef = FirebaseFirestore.getInstance().collection("Posts");
+        userRef = firestore.collection("Users");
 
         mToolBar = findViewById(R.id.my_posts_bar_layout);
         setSupportActionBar(mToolBar);
@@ -85,6 +92,8 @@ public class MyPostsActivity extends AppCompatActivity {
                         holder.setPostImage(getApplicationContext(), model.getPostImage());
                         final String postId = getSnapshots().getSnapshot(position).getId();
                         loadPreviousLikes(postId, currentUserId, holder);
+                        String userId = model.getUid();
+                        loadUserProfileImage(userId, holder.userProfileImageView);
 
 
                         holder.mView.setOnClickListener(new View.OnClickListener() {
@@ -133,12 +142,14 @@ public class MyPostsActivity extends AppCompatActivity {
 
         public ImageButton likeButton, commentButton;
         public TextView displayLike;
+        public CircleImageView userProfileImageView;
         public MyPostsViewHolder( View itemView) {
             super(itemView);
             mView = itemView;
             likeButton = mView.findViewById(R.id.like_post_btn);
             commentButton = mView.findViewById(R.id.comment_post_btn);
             displayLike = mView.findViewById(R.id.display_like_text);
+            userProfileImageView = mView.findViewById(R.id.post_profile_image);
         }
         public void setFullName(String fullName) {
             TextView username = mView.findViewById(R.id.post_user_name);
@@ -164,6 +175,21 @@ public class MyPostsActivity extends AppCompatActivity {
             ImageView PostImage = mView.findViewById(R.id.post_image);
             Picasso.get().load(postImage).into(PostImage);
         }
+    }
+    private void loadUserProfileImage(String userId, CircleImageView userProfileImageView) {
+        userRef.document(userId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String profileImage = snapshot.getString("profileImage");
+                    if (profileImage != null) {
+                        Picasso.get().load(profileImage).into(userProfileImageView);
+                    }
+                } else {
+                    Toast.makeText(MyPostsActivity.this, "Profile image does not exist", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     public void loadPreviousLikes(final String postId, final String userId, final MyPostsActivity.MyPostsViewHolder holder) {

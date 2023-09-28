@@ -22,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -30,7 +31,7 @@ import java.util.Map;
 
 public class FriendsActivity extends AppCompatActivity {
     private RecyclerView myFriendList;
-    private CollectionReference allFriendsRef,usersRef;
+    private CollectionReference allFriendsRef, usersRef;
     private FirebaseAuth mAuth;
     private String onlineUserId;
 
@@ -65,7 +66,7 @@ public class FriendsActivity extends AppCompatActivity {
                 .setQuery(allFriendsRef, Friends.class)
                 .build();
 
-        FirestoreRecyclerAdapter<Friends,FriendsActivity.FriendsViewHolder> adapter =
+        FirestoreRecyclerAdapter<Friends, FriendsActivity.FriendsViewHolder> adapter =
                 new FirestoreRecyclerAdapter<Friends, FriendsActivity.FriendsViewHolder>(options) {
                     @Override
                     protected void onBindViewHolder(@NonNull FriendsActivity.FriendsViewHolder holder, int position, @NonNull Friends model) {
@@ -74,21 +75,23 @@ public class FriendsActivity extends AppCompatActivity {
                         usersRef.document(usersId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                             @Override
                             public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                if (documentSnapshot.exists()){
+                                if (documentSnapshot.exists()) {
                                     String userName = documentSnapshot.getString("FullName");
+                                    String profileImage = documentSnapshot.getString("profileImage");
                                     final String type;
-                                    if(documentSnapshot.contains("userState")){
+                                    if (documentSnapshot.contains("userState")) {
                                         type = documentSnapshot.getString("userState.type");
 
-                                        if(type.equals("online")){
+                                        if (type.equals("online")) {
                                             holder.onlineStatus.setVisibility(View.VISIBLE);
-                                        }
-                                        else{
+                                        } else {
                                             holder.onlineStatus.setVisibility(View.INVISIBLE);
 
                                         }
                                     }
                                     holder.setFullName(userName);
+                                    holder.setProfileImage(profileImage);
+
                                     holder.setDateTime(model.getDateTime());
                                     holder.mView.setOnClickListener(new View.OnClickListener() {
                                         @Override
@@ -103,16 +106,16 @@ public class FriendsActivity extends AppCompatActivity {
                                             builder.setItems(options, new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialogInterface, int i) {
-                                                    if (i == 0){
-                                                        Intent personProfileActivity = new Intent(FriendsActivity.this,PersonProfileActivity.class);
-                                                        personProfileActivity.putExtra("visitUserid",usersId);
+                                                    if (i == 0) {
+                                                        Intent personProfileActivity = new Intent(FriendsActivity.this, PersonProfileActivity.class);
+                                                        personProfileActivity.putExtra("visitUserid", usersId);
                                                         startActivity(personProfileActivity);
 
                                                     }
-                                                    if (i == 1){
-                                                        Intent chartActivity = new Intent(FriendsActivity.this,ChartActivity.class);
-                                                        chartActivity.putExtra("visitUserid",usersId);
-                                                        chartActivity.putExtra("userName",userName);
+                                                    if (i == 1) {
+                                                        Intent chartActivity = new Intent(FriendsActivity.this, ChartActivity.class);
+                                                        chartActivity.putExtra("visitUserid", usersId);
+                                                        chartActivity.putExtra("userName", userName);
                                                         startActivity(chartActivity);
 
                                                     }
@@ -139,8 +142,8 @@ public class FriendsActivity extends AppCompatActivity {
         adapter.startListening();
     }
 
-    public void updateUserStatus(String state){
-        String saveCurrentDate ,saveCurrentTime;
+    public void updateUserStatus(String state) {
+        String saveCurrentDate, saveCurrentTime;
         Calendar calFordDate = Calendar.getInstance();
         SimpleDateFormat currentDate = new SimpleDateFormat("MMM dd,yyyy");
         saveCurrentDate = currentDate.format(calFordDate.getTime());
@@ -148,12 +151,12 @@ public class FriendsActivity extends AppCompatActivity {
         SimpleDateFormat currentTime = new SimpleDateFormat("hh:mm a");
         saveCurrentTime = currentTime.format(calFordDate.getTime());
 
-        Map<String,Object> currentStateMap = new HashMap<>();
-        currentStateMap.put("date",saveCurrentDate);
-        currentStateMap.put("time",saveCurrentTime);
-        currentStateMap.put("type",state);
+        Map<String, Object> currentStateMap = new HashMap<>();
+        currentStateMap.put("date", saveCurrentDate);
+        currentStateMap.put("time", saveCurrentTime);
+        currentStateMap.put("type", state);
 
-        usersRef.document(onlineUserId).update("userState",currentStateMap);
+        usersRef.document(onlineUserId).update("userState", currentStateMap);
     }
 
     @Override
@@ -176,21 +179,30 @@ public class FriendsActivity extends AppCompatActivity {
 
     }
 
-    public static class FriendsViewHolder extends RecyclerView.ViewHolder{
+    public static class FriendsViewHolder extends RecyclerView.ViewHolder {
         View mView;
         ImageView onlineStatus;
-        public FriendsViewHolder( View itemView) {
+
+        public FriendsViewHolder(View itemView) {
             super(itemView);
             mView = itemView;
             onlineStatus = itemView.findViewById(R.id.all_users_online_icon);
         }
-        public void setFullName(String FullName){
+
+        public void setFullName(String FullName) {
             TextView userName = mView.findViewById(R.id.all_users_profile_name);
             userName.setText(FullName);
         }
+
         public void setDateTime(String dateTime) {
             TextView friendsDateTime = mView.findViewById(R.id.all_users_status);
-            friendsDateTime.setText("Friends Since: "+ dateTime);
+            friendsDateTime.setText("Friends Since: " + dateTime);
         }
+
+        public void setProfileImage(String profileImage) {
+            ImageView profileImageView = mView.findViewById(R.id.all_users_profile_image);
+            Picasso.get().load(profileImage).into(profileImageView);
+        }
+
     }
 }

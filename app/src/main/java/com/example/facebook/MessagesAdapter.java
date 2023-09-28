@@ -8,17 +8,17 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.collection.LLRBNode;
-import com.google.firebase.firestore.CollectionReference;
+
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
+
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
         this.userMessagesList = userMessagesList;
     }
 
-    public class MessageViewHolder extends RecyclerView.ViewHolder {
+    public static class MessageViewHolder extends RecyclerView.ViewHolder {
         public TextView senderMessageText, receiverMessageText;
         public CircleImageView receiverProfileImage;
 
@@ -63,13 +63,20 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
 
         String fromUserId = messages.getMessageFrom();
         String fromMessageType = messages.getType();
+        CircleImageView receiverProfileImage = holder.receiverProfileImage;
         usersRef = FirebaseFirestore.getInstance().collection("Users").document(fromUserId).get();
         usersRef.addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot snapshot) {
                 if (snapshot.exists()) {
-                    ////                    final String  profileImage = snapshot.getString("profileImage");
-////                    Picasso.with(ChartActivity.this).load(profileImage).placeholder(R.drawable.profile).into(receiverProfileImage);
+                    final String profileImage = snapshot.getString("profileImage");
+                    if (receiverProfileImage != null) {
+                        Picasso.get()
+                                .load(profileImage)
+                                .placeholder(R.drawable.profile)
+                                .into(receiverProfileImage);
+
+                    }
                 }
             }
         });

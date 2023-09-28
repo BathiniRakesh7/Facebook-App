@@ -119,9 +119,8 @@ public class MainActivity extends AppCompatActivity {
                     String profileImage = snapshot.getString("profileImage");
                     TextView userFullName = findViewById(R.id.nav_user_full_name);
                     CircleImageView userProfile = findViewById(R.id.nav_profile_image);
-                        userFullName.setText(userName);
+                    userFullName.setText(userName);
                     Picasso.get().load(profileImage).into(userProfile);
-                        Log.d("username", userName);
 
                 } else {
                     Toast.makeText(MainActivity.this, "Profile name does not exist", Toast.LENGTH_SHORT).show();

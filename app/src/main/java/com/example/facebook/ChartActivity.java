@@ -18,13 +18,10 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
+
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.CollectionReference;
@@ -33,6 +30,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -49,12 +47,12 @@ public class ChartActivity extends AppCompatActivity {
     private ImageButton sendMessageBtn, sendImageBtn;
     private EditText userMessageInput;
     private RecyclerView usersMessageList;
-    private  final List<Messages>messagesList = new ArrayList<>();
+    private final List<Messages> messagesList = new ArrayList<>();
     private LinearLayoutManager linearLayoutManager;
-    private MessagesAdapter messagesAdapter ;
-    private String messageReceiverId, messageReceiverName,messageSenderId,saveCurrentDate,saveCurrentTime;
+    private MessagesAdapter messagesAdapter;
+    private String messageReceiverId, messageReceiverName, messageSenderId, saveCurrentDate, saveCurrentTime;
 
-    private TextView receiverName,userLastSeen;
+    private TextView receiverName, userLastSeen;
     private CircleImageView receiverProfileImage;
     private FirebaseFirestore rootRef;
     private FirebaseAuth mAuth;
@@ -137,14 +135,12 @@ public class ChartActivity extends AppCompatActivity {
     }
 
 
-
     private void sendMessage() {
         updateUserStatus("online");
         String messageText = userMessageInput.getText().toString();
-        if (TextUtils.isEmpty(messageText)){
+        if (TextUtils.isEmpty(messageText)) {
             Toast.makeText(this, "Please type a Message", Toast.LENGTH_SHORT).show();
-        }
-        else {
+        } else {
             String messageSenderRef = "Messages/" + messageSenderId + "/" + messageReceiverId;
             String messageReceiverRef = "Messages/" + messageReceiverId + "/" + messageSenderId;
             CollectionReference messagesCollection = rootRef.collection("Messages");
@@ -189,8 +185,9 @@ public class ChartActivity extends AppCompatActivity {
             });
         }
     }
-    public void updateUserStatus(String state){
-        String saveCurrentDate ,saveCurrentTime;
+
+    public void updateUserStatus(String state) {
+        String saveCurrentDate, saveCurrentTime;
         Calendar calFordDate = Calendar.getInstance();
         SimpleDateFormat currentDate = new SimpleDateFormat("MMM dd,yyyy");
         saveCurrentDate = currentDate.format(calFordDate.getTime());
@@ -198,12 +195,12 @@ public class ChartActivity extends AppCompatActivity {
         SimpleDateFormat currentTime = new SimpleDateFormat("hh:mm a");
         saveCurrentTime = currentTime.format(calFordDate.getTime());
 
-        Map<String,Object> currentStateMap = new HashMap<>();
-        currentStateMap.put("date",saveCurrentDate);
-        currentStateMap.put("time",saveCurrentTime);
-        currentStateMap.put("type",state);
+        Map<String, Object> currentStateMap = new HashMap<>();
+        currentStateMap.put("date", saveCurrentDate);
+        currentStateMap.put("time", saveCurrentTime);
+        currentStateMap.put("type", state);
 
-        rootRef.collection("Users").document(messageSenderId).update("userState",currentStateMap);
+        rootRef.collection("Users").document(messageSenderId).update("userState", currentStateMap);
     }
 
     private void displayReceiverInfo() {
@@ -211,19 +208,21 @@ public class ChartActivity extends AppCompatActivity {
         rootRef.collection("Users").document(messageReceiverId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot snapshot) {
-                if(snapshot.exists()){
+                if (snapshot.exists()) {
                     final String type = snapshot.getString("userState.type");
                     final String lastDate = snapshot.getString("userState.date");
                     final String lastTime = snapshot.getString("userState.time");
-//                    final String  profileImage = snapshot.getString("profileImage");
-//                    Picasso.with(ChartActivity.this).load(profileImage).placeholder(R.drawable.profile).into(receiverProfileImage);
+                    final String profileImage = snapshot.getString("profileImage");
+                    Picasso.get()
+                            .load(profileImage)
+                            .placeholder(R.drawable.profile)
+                            .into(receiverProfileImage);
 
                     assert type != null;
-                    if(type.equals("online")){
+                    if (type.equals("online")) {
                         userLastSeen.setText("online");
-                    }
-                    else {
-                        userLastSeen.setText("Last seen: " + lastTime+" " + lastDate);
+                    } else {
+                        userLastSeen.setText("Last seen: " + lastTime + " " + lastDate);
                     }
                 }
 

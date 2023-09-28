@@ -13,17 +13,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.CollectionReference;;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.squareup.picasso.Picasso;
 
 public class FindFriendsActivity extends AppCompatActivity {
     private Toolbar mToolBar;
@@ -76,6 +76,20 @@ public class FindFriendsActivity extends AppCompatActivity {
                     @Override
                     protected void onBindViewHolder(@NonNull FindFriendsViewHolder holder, int position, @NonNull FindFriends model) {
                         holder.setFullName(model.getFullName());
+                        DocumentSnapshot snapshot = getSnapshots().getSnapshot(position);
+                        String usersId = snapshot.getId();
+                        allUsersRef.document(usersId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot snapshot) {
+                                if (snapshot.exists()) {
+                                    String profileImage = snapshot.getString("profileImage");
+                                    holder.setProfileImage(profileImage);
+                                } else {
+                                    Toast.makeText(FindFriendsActivity.this, "Profile image does not exist", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+
 
                         holder.mView.setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -85,7 +99,7 @@ public class FindFriendsActivity extends AppCompatActivity {
                                     String visitUserId = getSnapshots().getSnapshot(adapterPosition).getId();
 
                                     Intent personProfileActivity = new Intent(FindFriendsActivity.this, PersonProfileActivity.class);
-                                    personProfileActivity.putExtra("visitUserid",visitUserId);
+                                    personProfileActivity.putExtra("visitUserid", visitUserId);
                                     startActivity(personProfileActivity);
                                 }
                             }
@@ -104,16 +118,23 @@ public class FindFriendsActivity extends AppCompatActivity {
         adapter.startListening();
 
     }
-    public static class FindFriendsViewHolder extends RecyclerView.ViewHolder{
+
+    public static class FindFriendsViewHolder extends RecyclerView.ViewHolder {
         View mView;
 
-        public FindFriendsViewHolder( View itemView) {
+        public FindFriendsViewHolder(View itemView) {
             super(itemView);
             mView = itemView;
         }
-        public void setFullName(String FullName){
+
+        public void setFullName(String FullName) {
             TextView userName = mView.findViewById(R.id.all_users_profile_name);
             userName.setText(FullName);
+        }
+
+        public void setProfileImage(String profileImage) {
+            ImageView profileImageView = mView.findViewById(R.id.all_users_profile_image);
+            Picasso.get().load(profileImage).into(profileImageView);
         }
     }
 }

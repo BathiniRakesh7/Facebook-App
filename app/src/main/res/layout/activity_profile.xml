@@ -38,7 +38,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/my_profile_status"
-                android:text="Hey there ,i am using social app"
+                android:text="Hey there ,i am using facebook app"
                 android:layout_below="@+id/my_profile_full_name"
                 android:layout_marginTop="5dp"
                 android:textAlignment="center"
