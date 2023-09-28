@@ -99,6 +99,8 @@ public class MainActivity extends AppCompatActivity {
         linearLayoutManager.setStackFromEnd(true);
         postList.setLayoutManager(linearLayoutManager);
 
+        displayAllPosts();
+
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -154,11 +156,7 @@ public class MainActivity extends AppCompatActivity {
 
         userRef.document(currentUserId).update("userState",currentStateMap);
     }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
+    public void displayAllPosts(){
 
         Query query = firestore.collection("Posts");
 
