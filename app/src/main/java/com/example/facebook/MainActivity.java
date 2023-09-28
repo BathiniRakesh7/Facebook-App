@@ -46,6 +46,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class MainActivity extends AppCompatActivity {
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
@@ -114,14 +116,13 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(DocumentSnapshot snapshot) {
                 if (snapshot.exists()) {
                     String userName = snapshot.getString("FullName");
+                    String profileImage = snapshot.getString("profileImage");
                     TextView userFullName = findViewById(R.id.nav_user_full_name);
-
-                    if (userFullName != null) {
+                    CircleImageView userProfile = findViewById(R.id.nav_profile_image);
                         userFullName.setText(userName);
+                    Picasso.get().load(profileImage).into(userProfile);
                         Log.d("username", userName);
-                    } else {
-                        Log.e("Error", "userFullName TextView is null");
-                    }
+
                 } else {
                     Toast.makeText(MainActivity.this, "Profile name does not exist", Toast.LENGTH_SHORT).show();
                 }
@@ -172,9 +173,11 @@ public class MainActivity extends AppCompatActivity {
                 viewHolder.setDescription(model.getDescription());
                 viewHolder.setPostImage(getApplicationContext(), model.getPostImage());
                 final String postId = getSnapshots().getSnapshot(position).getId();
+                String userId = model.getUid();
+                loadUserProfileImage(userId, viewHolder.userProfileImageView);
+
+
                 loadPreviousLikes(postId, currentUserId, viewHolder);
-
-
                 viewHolder.mView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -220,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
         View mView;
         public ImageButton likeButton, commentButton;
         public TextView displayLike;
+        public CircleImageView userProfileImageView;
 
 
         public PostsViewHolder(View itemView) {
@@ -228,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
             likeButton = mView.findViewById(R.id.like_post_btn);
             commentButton = mView.findViewById(R.id.comment_post_btn);
             displayLike = mView.findViewById(R.id.display_like_text);
+            userProfileImageView = mView.findViewById(R.id.post_profile_image);
         }
 
 
@@ -255,6 +260,21 @@ public class MainActivity extends AppCompatActivity {
             ImageView PostImage = mView.findViewById(R.id.post_image);
             Picasso.get().load(postImage).into(PostImage);
         }
+    }
+    private void loadUserProfileImage(String userId, CircleImageView userProfileImageView) {
+        userRef.document(userId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String profileImage = snapshot.getString("profileImage");
+                    if (profileImage != null) {
+                        Picasso.get().load(profileImage).into(userProfileImageView);
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "Profile image does not exist", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     public void loadPreviousLikes(final String postId, final String userId, final PostsViewHolder viewHolder) {

@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -20,7 +21,13 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -32,8 +39,11 @@ public class SettingsActivity extends AppCompatActivity {
     private CircleImageView userprofileImage;
     private DocumentReference settingsUserRef;
     private FirebaseAuth mAuth;
-    private String currentUserId;
+    private String currentUserId,saveCurrentDate,downloadUrl;
+    private Uri ImageUri;
     private static final int Gallery_Pick = 1;
+
+    private StorageReference profileImagesReference;
 
 
     @Override
@@ -45,6 +55,9 @@ public class SettingsActivity extends AppCompatActivity {
         currentUserId = mAuth.getCurrentUser().getUid();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         settingsUserRef = db.collection("Users").document(currentUserId);
+
+        StorageReference storageReference = FirebaseStorage.getInstance().getReference();
+        profileImagesReference = storageReference.child("Profile Images");
 
         mToolBar = findViewById(R.id.settings_toolbar);
         setSupportActionBar(mToolBar);
@@ -74,9 +87,11 @@ public class SettingsActivity extends AppCompatActivity {
                     String userName = documentSnapshot.getString("FullName");
                     String userEmail = documentSnapshot.getString("email");
                     String phone = documentSnapshot.getString("phone");
+                    String profileImage = documentSnapshot.getString("profileImage");
                     fullName.setText(userName);
                     email.setText(userEmail);
                     phoneNumber.setText(phone);
+                    Picasso.get().load(profileImage).into(userprofileImage);
                 } else {
                     Toast.makeText(SettingsActivity.this, "Data not Retrieved", Toast.LENGTH_SHORT).show();
                 }
@@ -97,17 +112,17 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
     }
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-//    {
-//        super.onActivityResult(requestCode, resultCode, data);
-//
-//        if(requestCode==Gallery_Pick && resultCode==RESULT_OK && data!=null)
-//        {
-//            ImageUri = data.getData();
-//            selectPostImage.setImageURI(ImageUri);
-//        }
-//    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode==Gallery_Pick && resultCode==RESULT_OK && data!=null)
+        {
+            ImageUri = data.getData();
+            userprofileImage.setImageURI(ImageUri);
+        }
+    }
 
     private void validateAccountInfo() {
         String name = fullName.getText().toString();
@@ -121,8 +136,44 @@ public class SettingsActivity extends AppCompatActivity {
         } else if (TextUtils.isEmpty(phone)) {
             Toast.makeText(this, "Please enter your Mobile Number", Toast.LENGTH_SHORT).show();
         } else {
-            updateAccountInfo(name, userEmail, phone);
+            StoringImageToFirebaseStorage();
         }
+    }
+
+    private void StoringImageToFirebaseStorage()
+    {
+        String name = fullName.getText().toString();
+        String userEmail = email.getText().toString();
+        String phone = phoneNumber.getText().toString();
+
+        Calendar calFordDate = Calendar.getInstance();
+        SimpleDateFormat currentDate = new SimpleDateFormat("dd-MM-yyyy");
+        saveCurrentDate = currentDate.format(calFordDate.getTime());;
+
+        StorageReference filePath = profileImagesReference.child(ImageUri.getLastPathSegment() + saveCurrentDate + ".jpg");
+
+        filePath.putFile(ImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task)
+            {
+                if(task.isSuccessful())
+                {
+                    filePath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            downloadUrl = uri.toString();
+                            Toast.makeText(SettingsActivity.this, "Image saved successfully...", Toast.LENGTH_SHORT).show();
+                            updateAccountInfo(name, userEmail, phone);
+                        }
+                    });
+                }
+                else
+                {
+                    String message = task.getException().getMessage();
+                    Toast.makeText(SettingsActivity.this, "Error occurred: " + message, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void updateAccountInfo(String name, String userEmail, String phone) {
@@ -131,6 +182,7 @@ public class SettingsActivity extends AppCompatActivity {
         userMap.put("FullName", name);
         userMap.put("email", userEmail);
         userMap.put("phone", phone);
+        userMap.put("profileImage",downloadUrl);
         settingsUserRef.update(userMap).addOnCompleteListener(new OnCompleteListener() {
             @Override
             public void onComplete(@NonNull Task task) {
