@@ -11,7 +11,7 @@
         android:layout_marginStart="50dp"
         android:layout_marginBottom="10dp"
         android:src="@drawable/profile"
-        app:civ_border_color="@color/lightBlue"
+        app:civ_border_color="@color/white"
         android:id="@+id/nav_profile_image"
         app:civ_border_width="2dp" />
 
