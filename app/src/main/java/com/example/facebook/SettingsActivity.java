@@ -162,15 +162,14 @@ public class SettingsActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(Uri uri) {
                             downloadUrl = uri.toString();
-                            Toast.makeText(SettingsActivity.this, "Image saved successfully...", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(SettingsActivity.this, "Profile Image Updated successfully...", Toast.LENGTH_SHORT).show();
                             updateAccountInfo(name, userEmail, phone);
                         }
                     });
                 }
                 else
                 {
-                    String message = task.getException().getMessage();
-                    Toast.makeText(SettingsActivity.this, "Error occurred: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SettingsActivity.this, "Error occurred: " + task.getException(), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -188,7 +187,7 @@ public class SettingsActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task task) {
                 if (task.isSuccessful()) {
                     sendUserMainActivity();
-                    Toast.makeText(SettingsActivity.this, "Account Settings Updated Successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SettingsActivity.this, "Account Updated Successfully", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(SettingsActivity.this, "error occur while updating", Toast.LENGTH_SHORT).show();
 

@@ -28,7 +28,7 @@ public class LoginAccount extends AppCompatActivity {
 
     EditText email, password;
     Button loginBtn;
-    TextView createBtn;
+    TextView createBtn,resetPassword;
     ProgressBar progressBar2;
     FirebaseAuth auth;
 
@@ -40,6 +40,7 @@ public class LoginAccount extends AppCompatActivity {
         password = findViewById(R.id.editTextPassword);
         loginBtn = findViewById(R.id.loginbtn);
         createBtn = findViewById(R.id.textCreateHere);
+        resetPassword = findViewById(id.forget_password_link);
         email = findViewById(R.id.editTextEmail);
         auth = FirebaseAuth.getInstance();
         progressBar2 = findViewById(R.id.progressBar2);
@@ -94,6 +95,13 @@ public class LoginAccount extends AppCompatActivity {
 
             }
         });
+        resetPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getApplicationContext(), ResetPasswordActivity.class));
+            }
+        });
 
     }
+
 }
